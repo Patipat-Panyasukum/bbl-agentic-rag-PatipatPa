@@ -12,7 +12,7 @@ from benefitwise.retrieval import PolicyEvidence, PolicyRetriever
 class PolicyRetrievalInput(BaseModel):
     """Arguments the Data Retriever Agent is allowed to choose."""
 
-    query: str = Field(description="Focused benefit-policy search query")
+    query: str = Field(min_length=1, description="Focused benefit-policy search query")
     top_k: int = Field(default=3, ge=1, le=10, description="Maximum evidence items")
 
 

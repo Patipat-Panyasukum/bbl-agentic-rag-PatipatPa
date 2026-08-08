@@ -51,12 +51,14 @@ class PolicyChunk:
     title: str
     content: str
     eligibility: PolicyEligibility
+    search_terms: tuple[str, ...] = ()
 
     @property
     def searchable_text(self) -> str:
         """Text presented to the embedding model after eligibility filtering."""
 
-        return f"{self.title}\n{self.content}"
+        retrieval_hints = "\n".join(self.search_terms)
+        return "\n".join(part for part in (self.title, self.content, retrieval_hints) if part)
 
 
 def parse_job_level(job_level: str) -> int:

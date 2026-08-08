@@ -43,7 +43,7 @@ class PolicyRetriever:
         policies: Sequence[PolicyChunk],
         embedding_provider: EmbeddingProvider,
         *,
-        min_similarity: float = 0.25,
+        min_similarity: float = 0.26,
     ) -> None:
         if not -1.0 <= min_similarity <= 1.0:
             raise ValueError("min_similarity must be between -1.0 and 1.0")

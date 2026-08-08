@@ -11,9 +11,9 @@ from benefitwise.employee import EmployeeContext
 DEFAULT_DATABASE_PATH = Path("data/employees.db")
 
 DEMO_EMPLOYEES = (
-    EmployeeContext("E001", "JL3", "TH", "BBL", "Permanent"),
-    EmployeeContext("E002", "JL6", "TH", "BBL", "Permanent"),
-    EmployeeContext("E003", "JL9", "TH", "BBL", "Permanent"),
+    EmployeeContext("E001", "JL3", "TH", "DEMO", "General"),
+    EmployeeContext("E002", "JL6", "TH", "DEMO", "General"),
+    EmployeeContext("E003", "JL1", "TH", "DEMO", "Operations"),
 )
 
 _CREATE_EMPLOYEES_TABLE = """

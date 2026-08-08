@@ -1,0 +1,32 @@
+[
+  {
+    "case_id": "opd-general-e001",
+    "employee_id": "E001",
+    "query": "How much can I claim for outpatient medical expenses?",
+    "expected_policy_id": "MED-OPD-GENERAL-JL2-8"
+  },
+  {
+    "case_id": "opd-operations-e003",
+    "employee_id": "E003",
+    "query": "How much OPD can I claim per visit and how many visits per year?",
+    "expected_policy_id": "MED-OPD-OPERATIONS-JL1"
+  },
+  {
+    "case_id": "ipd-general-e002-th",
+    "employee_id": "E002",
+    "query": "วงเงินผู้ป่วยในและค่าห้องของฉันเท่าไร",
+    "expected_policy_id": "MED-IPD-GENERAL-JL2-8"
+  },
+  {
+    "case_id": "social-security-e003-th",
+    "employee_id": "E003",
+    "query": "ต้องใช้สิทธิประกันสังคมก่อนเบิกค่ารักษาหรือไม่",
+    "expected_policy_id": "MED-SCOPE-OPERATIONS-JL1"
+  },
+  {
+    "case_id": "unsupported-parking-e001",
+    "employee_id": "E001",
+    "query": "Where can I park my car at the office?",
+    "expected_policy_id": null
+  }
+]

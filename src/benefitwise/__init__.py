@@ -1,6 +1,13 @@
 """BenefitWise AI application package."""
 
-from benefitwise.embeddings import SentenceTransformerEmbeddings
+from benefitwise.agents import (
+    INSUFFICIENT_INFORMATION_RESPONSE,
+    DataRetrieverAgent,
+    ReportGeneratorAgent,
+)
+from benefitwise.application import create_default_graph
+from benefitwise.config import AppSettings
+from benefitwise.embeddings import OpenAIEmbeddingProvider
 from benefitwise.employee import EmployeeContext
 from benefitwise.employee_repository import (
     EmployeeDatabaseNotInitializedError,
@@ -14,17 +21,22 @@ from benefitwise.retrieval import PolicyEvidence, PolicyRetriever
 from benefitwise.retrieval_tool import build_policy_retrieval_tool
 
 __all__ = [
+    "AppSettings",
+    "DataRetrieverAgent",
     "EmployeeContext",
     "EmployeeDatabaseNotInitializedError",
     "EmployeeNotFoundError",
+    "INSUFFICIENT_INFORMATION_RESPONSE",
     "PolicyChunk",
     "PolicyEligibility",
     "PolicyEvidence",
     "PolicyParseError",
     "PolicyRetriever",
-    "SentenceTransformerEmbeddings",
+    "ReportGeneratorAgent",
+    "OpenAIEmbeddingProvider",
     "SQLiteEmployeeRepository",
     "build_policy_retrieval_tool",
+    "create_default_graph",
     "filter_eligible_policies",
     "initialize_employee_database",
     "load_policy_chunks",

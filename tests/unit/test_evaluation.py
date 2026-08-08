@@ -37,7 +37,7 @@ def _evidence(policy_id: str) -> PolicyEvidence:
 
 
 def _employee_resolver(employee_id: str) -> EmployeeContext:
-    return EmployeeContext(employee_id, "JL3", "TH", "BBL", "Permanent")
+    return EmployeeContext(employee_id, "JL3", "TH", "DEMO", "General")
 
 
 def test_calculates_hit_at_k_mrr_and_negative_accuracy() -> None:

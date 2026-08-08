@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "chunks": [
+    {
+      "policy_id": "MED-SCOPE-GENERAL-JL2-8",
+      "section_id": "2.1",
+      "search_terms": [
+        "medical benefit eligibility",
+        "employee on probation",
+        "สิทธิสวัสดิการรักษาพยาบาล พนักงานทดลองงาน"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-SCOPE-OPERATIONS-JL1",
+      "section_id": "2.2",
+      "search_terms": [
+        "operations employee medical eligibility",
+        "use social security before claiming excess",
+        "ใช้สิทธิประกันสังคมก่อนเบิกส่วนเกิน"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["OPERATIONS"],
+        "min_job_level": 1,
+        "max_job_level": 1
+      }
+    },
+    {
+      "policy_id": "MED-DAYCASE-GENERAL-JL2-8",
+      "section_id": "3.8",
+      "search_terms": [
+        "day case same-day procedure",
+        "endoscopy outpatient procedure",
+        "การรักษาแบบวันเดียว การส่องกล้อง"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-COVERED-GENERAL-JL2-8",
+      "section_id": "4.2",
+      "search_terms": [
+        "covered medical expenses",
+        "emergency ambulance benefit",
+        "รายการค่ารักษา ค่ารถพยาบาลฉุกเฉิน"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-COVERED-OPERATIONS-JL1",
+      "section_id": "4.2",
+      "search_terms": [
+        "covered medical expenses for operations employees",
+        "emergency ambulance benefit",
+        "รายการค่ารักษา ค่ารถพยาบาลฉุกเฉิน"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["OPERATIONS"],
+        "min_job_level": 1,
+        "max_job_level": 1
+      }
+    },
+    {
+      "policy_id": "MED-OPD-GENERAL-JL2-8",
+      "section_id": "4.4.1.1",
+      "search_terms": [
+        "outpatient medical benefit",
+        "OPD annual allowance clinic visit reimbursement",
+        "วงเงินผู้ป่วยนอกต่อปี"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-IPD-GENERAL-JL2-8",
+      "section_id": "4.4.1.2",
+      "search_terms": [
+        "inpatient medical benefit hospital admission",
+        "IPD hospital room and food limit",
+        "วงเงินผู้ป่วยใน ค่าห้อง ค่าอาหาร"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-ACCIDENT-GENERAL-JL2-8",
+      "section_id": "4.4.1.3",
+      "search_terms": [
+        "accident medical benefit",
+        "overseas treatment while working abroad travel insurance first",
+        "อุบัติเหตุ รักษาต่างประเทศ ใช้ประกันการเดินทางก่อน"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-OPD-OPERATIONS-JL1",
+      "section_id": "4.4.2.1",
+      "search_terms": [
+        "operations outpatient medical benefit",
+        "OPD limit per clinic visit visits per year",
+        "วงเงินผู้ป่วยนอกต่อครั้ง จำนวนครั้งต่อปี"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["OPERATIONS"],
+        "min_job_level": 1,
+        "max_job_level": 1
+      }
+    },
+    {
+      "policy_id": "MED-IPD-OPERATIONS-JL1",
+      "section_id": "4.4.2.2",
+      "search_terms": [
+        "operations inpatient medical benefit",
+        "IPD hospital room and food limit",
+        "วงเงินผู้ป่วยใน ค่าห้อง ค่าอาหาร"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["OPERATIONS"],
+        "min_job_level": 1,
+        "max_job_level": 1
+      }
+    },
+    {
+      "policy_id": "MED-CLAIM-GENERAL-JL2-8",
+      "section_id": "5.1",
+      "search_terms": [
+        "medical claim procedure",
+        "receipt and medical certificate payroll reimbursement",
+        "ขั้นตอนเบิก ใบเสร็จ ใบรับรองแพทย์"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["GENERAL"],
+        "min_job_level": 2,
+        "max_job_level": 8
+      }
+    },
+    {
+      "policy_id": "MED-CLAIM-OPERATIONS-JL1",
+      "section_id": "5.2",
+      "search_terms": [
+        "operations medical claim procedure",
+        "use social security first receipt medical certificate",
+        "ใช้ประกันสังคมก่อน ขั้นตอนเบิก ใบเสร็จ ใบรับรองแพทย์"
+      ],
+      "eligibility": {
+        "countries": ["TH"],
+        "companies": ["DEMO"],
+        "employee_types": ["OPERATIONS"],
+        "min_job_level": 1,
+        "max_job_level": 1
+      }
+    }
+  ]
+}

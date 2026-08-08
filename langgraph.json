@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "benefitwise": "./src/benefitwise/langgraph_app.py:graph"
+  },
+  "env": ".env"
+}

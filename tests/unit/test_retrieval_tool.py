@@ -20,13 +20,13 @@ def _build_tool(employee: EmployeeContext):
 
 
 def test_tool_schema_does_not_expose_employee_identity() -> None:
-    tool = _build_tool(EmployeeContext("E001", "JL3", "TH", "BBL", "Permanent"))
+    tool = _build_tool(EmployeeContext("E001", "JL3", "TH", "DEMO", "General"))
 
     assert set(tool.args) == {"query", "top_k"}
 
 
 def test_tool_returns_raw_employee_specific_evidence() -> None:
-    tool = _build_tool(EmployeeContext("E001", "JL3", "TH", "BBL", "Permanent"))
+    tool = _build_tool(EmployeeContext("E001", "JL3", "TH", "DEMO", "General"))
 
     result = tool.invoke(
         {
@@ -38,14 +38,15 @@ def test_tool_returns_raw_employee_specific_evidence() -> None:
     )
 
     assert isinstance(result, ToolMessage)
-    assert "MED-OPD-JL1-4" in result.content
-    assert "THB 20,000" in result.content
-    assert "MED-OPD-JL5-7" not in result.content
-    assert result.artifact[0]["policy_id"] == "MED-OPD-JL1-4"
+    assert "MED-OPD-GENERAL-JL2-8" in result.content
+    assert "THB 14,250" in result.content
+    assert "MED-OPD-OPERATIONS-JL1" not in result.content
+    assert result.artifact[0]["policy_id"] == "MED-OPD-GENERAL-JL2-8"
+    assert "search_terms" not in result.artifact[0]
 
 
 def test_tool_reports_no_evidence_for_irrelevant_query() -> None:
-    tool = _build_tool(EmployeeContext("E003", "JL9", "TH", "BBL", "Permanent"))
+    tool = _build_tool(EmployeeContext("E003", "JL1", "TH", "DEMO", "Operations"))
 
     content = tool.invoke({"query": "employee parking location", "top_k": 3})
 

@@ -1,74 +1,83 @@
 [
   {
-    "case_id": "opd-e001-direct",
+    "case_id": "opd-general-e001-en",
     "employee_id": "E001",
     "query": "How much can I claim for outpatient medical expenses?",
-    "expected_policy_ids": ["MED-OPD-JL1-4"]
+    "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"]
   },
   {
-    "case_id": "opd-e002-paraphrase",
+    "case_id": "opd-general-e002-th",
     "employee_id": "E002",
-    "query": "What is my allowance for clinic visits?",
-    "expected_policy_ids": ["MED-OPD-JL5-7"]
+    "query": "วงเงินค่ารักษาผู้ป่วยนอกของฉันต่อปีเท่าไร",
+    "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"]
   },
   {
-    "case_id": "opd-e003-direct",
+    "case_id": "opd-operations-e003-en",
     "employee_id": "E003",
-    "query": "What is my yearly OPD reimbursement limit?",
-    "expected_policy_ids": ["MED-OPD-JL8-10"]
+    "query": "What is my OPD allowance per clinic visit?",
+    "expected_policy_ids": ["MED-OPD-OPERATIONS-JL1"]
   },
   {
-    "case_id": "inpatient-e001",
+    "case_id": "opd-operations-e003-th",
+    "employee_id": "E003",
+    "query": "พนักงานปฏิบัติการเบิก OPD ได้กี่ครั้งต่อปี",
+    "expected_policy_ids": ["MED-OPD-OPERATIONS-JL1"]
+  },
+  {
+    "case_id": "ipd-general-e001",
     "employee_id": "E001",
     "query": "How much inpatient hospital coverage do I receive?",
-    "expected_policy_ids": ["MED-INPATIENT-JL1-4"]
+    "expected_policy_ids": ["MED-IPD-GENERAL-JL2-8"]
   },
   {
-    "case_id": "inpatient-e002",
+    "case_id": "ipd-room-general-e002-th",
     "employee_id": "E002",
-    "query": "What is my hospital admission benefit?",
-    "expected_policy_ids": ["MED-INPATIENT-JL5-7"]
+    "query": "ค่าห้องและค่าอาหารกรณีนอนโรงพยาบาลเบิกได้วันละเท่าไร",
+    "expected_policy_ids": ["MED-IPD-GENERAL-JL2-8"]
   },
   {
-    "case_id": "dental-e003",
+    "case_id": "ipd-operations-e003",
     "employee_id": "E003",
-    "query": "Can I claim dental treatment?",
-    "expected_policy_ids": ["MED-DENTAL-ALL"]
+    "query": "What are my inpatient and hospital room limits?",
+    "expected_policy_ids": ["MED-IPD-OPERATIONS-JL1"]
   },
   {
-    "case_id": "leave-e001",
+    "case_id": "probation-scope-e001",
+    "employee_id": "E001",
+    "query": "Does the medical benefit cover an employee on probation?",
+    "expected_policy_ids": ["MED-SCOPE-GENERAL-JL2-8"]
+  },
+  {
+    "case_id": "social-security-first-e003",
+    "employee_id": "E003",
+    "query": "Do I need to use social security before claiming the excess?",
+    "expected_policy_ids": [
+      "MED-SCOPE-OPERATIONS-JL1",
+      "MED-CLAIM-OPERATIONS-JL1"
+    ]
+  },
+  {
+    "case_id": "day-case-e001",
+    "employee_id": "E001",
+    "query": "Is a same-day endoscopy treated as a Day Case?",
+    "expected_policy_ids": ["MED-DAYCASE-GENERAL-JL2-8"]
+  },
+  {
+    "case_id": "ambulance-e002-th",
+    "employee_id": "E002",
+    "query": "ค่ารถพยาบาลฉุกเฉินอยู่ในรายการที่เบิกได้หรือไม่",
+    "expected_policy_ids": ["MED-COVERED-GENERAL-JL2-8"]
+  },
+  {
+    "case_id": "overseas-accident-e001",
+    "employee_id": "E001",
+    "query": "Which benefit must I use first for an accident while working overseas?",
+    "expected_policy_ids": ["MED-ACCIDENT-GENERAL-JL2-8"]
+  },
+  {
+    "case_id": "unsupported-leave",
     "employee_id": "E001",
     "query": "How many annual leave days do I have?",
-    "expected_policy_ids": ["LEAVE-ANNUAL-JL1-4"]
-  },
-  {
-    "case_id": "leave-e002-paraphrase",
-    "employee_id": "E002",
-    "query": "How many paid vacation days am I entitled to?",
-    "expected_policy_ids": ["LEAVE-ANNUAL-JL5-7"]
-  },
-  {
-    "case_id": "leave-e003",
-    "employee_id": "E003",
-    "query": "Tell me my annual leave entitlement.",
-    "expected_policy_ids": ["LEAVE-ANNUAL-JL8-10"]
-  },
-  {
-    "case_id": "travel-e002",
-    "employee_id": "E002",
-    "query": "What is the international business travel policy?",
-    "expected_policy_ids": ["TRAVEL-INTL-JL5-7"]
-  },
-  {
-    "case_id": "travel-e003-paraphrase",
-    "employee_id": "E003",
-    "query": "May I fly business class for an overseas work trip?",
-    "expected_policy_ids": ["TRAVEL-INTL-JL8-10"]
-  },
-  {
-    "case_id": "travel-e001-ineligible",
-    "employee_id": "E001",
-    "query": "What is the international business travel policy?",
     "expected_policy_ids": []
   },
   {
