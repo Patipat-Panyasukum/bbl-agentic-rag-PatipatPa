@@ -19,7 +19,9 @@ Test deterministic components independently:
 - policy prose remains free of retrieval metadata and custom block markers
 - sidecar schema, missing section references, and source/metadata joining
 - eligibility rules across employee metadata
-- cosine-similarity ordering, ties, and Top-K limits
+- Chroma cosine-distance conversion, ordering, deterministic ties, and Top-K
+- generated-index synchronization, stale-row removal, and embedding reuse
+- vector metadata records the numbered-clause strategy and zero overlap
 - empty candidates and irrelevant input
 
 ### Retrieval tests
@@ -30,7 +32,8 @@ Using fixed employees and expected policy IDs, verify that:
 - paraphrases retrieve the same relevant policy
 - the same question returns profile-appropriate evidence: E001/E002 share the
   JL2-JL8 General policy while E003 receives the Operations JL1 policy
-- ineligible policies are removed before semantic ranking
+- deterministic eligibility becomes Chroma's exact candidate-ID metadata filter
+- a semantically stronger but ineligible vector cannot enter the ranked results
 - unsupported questions return no usable evidence
 
 Embedding-dependent tests should control the embedding model or mark slow/model
@@ -75,6 +78,24 @@ Maintain representative end-to-end examples for:
 The unsupported case passes only when the answer explicitly says that the
 available policy evidence is insufficient and contains no invented entitlement.
 
+### Agent workflow evaluation
+
+The committed `eval/agent_cases.json` dataset evaluates the API-backed graph as
+a black box. It scores evidence selection, required citations, explicit answer
+facts, answer language, the graph grounding flag, and exact abstention behavior.
+Provider errors are recorded per case so one failure does not hide later cases.
+
+Run a low-cost canary before the complete set:
+
+```powershell
+python scripts/evaluate_agents.py --limit 1
+python scripts/evaluate_agents.py
+```
+
+The evaluator is deterministic after the model returns; it does not add another
+LLM-as-judge call. Current executed results are recorded in
+[the agent evaluation report](../eval/AGENT_RESULTS.md).
+
 ## Retrieval evaluation
 
 Each evaluation example contains a query, employee ID, and one or more expected
@@ -104,12 +125,12 @@ turn a planned test into a claimed result or call "no tests collected" a pass.
 ## Current implemented coverage
 
 The deterministic suite covers employee lookup, policy parsing failures, every
-eligibility dimension, employee-specific OPD results, paraphrases, filtering
-before embedding, cosine/zero-vector behavior, Top-K, irrelevant queries,
-tool-schema identity protection, tool artifacts, dataset validation, and metric
-calculation.
+eligibility dimension, employee-specific OPD results, paraphrases, the Chroma
+metadata candidate boundary, cosine-distance conversion, persistent-record
+reuse, stale-row cleanup, chunk metadata, Top-K, irrelevant queries, tool-schema
+identity protection, tool artifacts, dataset validation, and metric calculation.
 
-The OpenAI embedding evaluation uses 14 committed English/Thai cases and
+The OpenAI embedding evaluation uses 15 committed English/Thai cases and
 currently records Hit@1 `1.000`, Hit@3 `1.000`, MRR `1.000`, and no-evidence
 accuracy `1.000`. See [the evaluation report](../eval/RESULTS.md) for
 configuration and limitations.
@@ -123,3 +144,8 @@ employee short-circuiting, and personalized E001/E002/E003 graph results.
 API-backed smoke verification is deliberately separate from pytest. It checks
 provider compatibility and real prompt/tool behavior while keeping normal tests
 fast, deterministic, and free of API cost.
+
+The full-workflow dataset currently contains 10 English/Thai cases. Its executed
+baseline is `1.000` for evidence, citation, required-fact, language, grounding,
+abstention, and overall accuracy. This is a small curated baseline rather than a
+claim of production quality.

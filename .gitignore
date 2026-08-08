@@ -10,6 +10,7 @@ __pycache__/
 
 # Generated data
 data/*.db
+data/chroma/
 
 # LangGraph
 .langgraph/

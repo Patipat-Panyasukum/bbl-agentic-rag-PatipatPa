@@ -25,6 +25,8 @@ def create_default_graph(settings: AppSettings | None = None):
         ),
         build_embedding_provider(runtime_settings),
         min_similarity=runtime_settings.min_similarity,
+        chroma_path=runtime_settings.chroma_path,
+        embedding_model_id=runtime_settings.embedding_model,
     )
     model = build_chat_model(runtime_settings)
     return build_benefit_graph(

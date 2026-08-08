@@ -2,12 +2,12 @@
 
 ## Current state
 
-- Branch: `feat/langgraph-agents`, based on merged `feat/core-rag`.
-- Tracked project content before this slice: dependency/environment files and
-  an empty README.
-- Implemented runtime layers: deterministic employee context and core RAG.
-- Active branch: `feat/langgraph-agents`; implementation and the policy/embedding
-  revision are complete and verified.
+- Branch: `feat/evaluation-observability`, based on merged
+  `feat/langgraph-agents`.
+- Implemented runtime layers: deterministic employee context, eligibility-first
+  semantic retrieval, two agents, sequential LangGraph, CLI, and smoke cases.
+- Active branch outcome: agent evaluation, query-drift protection, LangSmith
+  trace labels, and compiled graph artifacts are complete and verified.
 
 ## Active slice: workflow baseline
 
@@ -192,11 +192,83 @@ Status: **complete (2026-08-08)**
 - `python -m compileall -q src scripts tests`, `pip check`, `langgraph validate`,
   `git diff --check`, and stale-model-reference scan: passed.
 
-## Next branch: evaluation and observability
+## Active branch outcome: evaluation and observability
 
-After review and merge, create `feat/evaluation-observability` from updated
-`main`. Add agent groundedness cases, LangSmith trace evidence, graph screenshots,
-and any evaluation gaps discovered during reviewer-oriented testing.
+Status: **complete (2026-08-08)**
+
+- [x] Add a committed 10-case full-workflow dataset and deterministic evaluator.
+- [x] Score evidence, citations, required facts, language, grounding, abstention,
+  and overall case success without adding an LLM judge.
+- [x] Add inherited LangSmith run names, source/case tags, and safe metadata to
+  CLI, smoke, and evaluation invocations.
+- [x] Export Mermaid and PNG artifacts from the compiled graph.
+- [x] Use measured failures to anchor agent queries to the original question and
+  pin Report Generator language/evidence-selection behavior.
+- [x] Document local evaluation, trace inspection, data handling, results, and
+  limitations.
+
+### Evaluation and verification record
+
+- Initial full-workflow evaluation: 8 of 10 cases passed. It exposed generic
+  query drift on annual leave and an ambiguous overseas reference case.
+- Final API-backed agent evaluation after targeted fixes: all 10 cases passed;
+  evidence, citation, required-fact, language, grounding, abstention, and overall
+  accuracy were each `1.000`.
+- OpenAI retrieval evaluation: all 14 cases passed; Hit@1 `1.000`, Hit@3 `1.000`,
+  MRR `1.000`, and no-evidence accuracy `1.000`.
+- Full regression: 93 tests passed in 6.92 seconds.
+- LangSmith read-back: a successful `benefitwise.evaluation` root contained the
+  four graph nodes plus nested Retriever model, retrieval tool, and Report
+  Generator model runs with the expected case metadata.
+- Compiled graph export wrote validated Mermaid source and a 16,165-byte PNG;
+  the generated image was visually inspected.
+- `python -m compileall -q src scripts tests`, `pip check`, and
+  `langgraph validate`: passed; one graph discovered.
+
+## Active revision: local persistent Chroma retrieval
+
+Status: **complete (2026-08-08)**
+
+- [x] Add a local persistent Chroma index without introducing hosted
+  infrastructure.
+- [x] Keep employee eligibility deterministic and pass only admitted policy IDs
+  into Chroma's metadata filter before cosine ranking.
+- [x] Synchronize only new/changed generated vectors and remove stale index rows.
+- [x] Record natural numbered-clause chunking with overlap `0` and document why
+  arbitrary token overlap is not useful for the current short coherent clauses.
+- [x] Preserve raw policy evidence, original-question anchoring, and grounded
+  insufficient-information behavior.
+- [x] Calibrate the existing threshold against positive, negative, and boundary
+  cases rather than changing it based on its absolute value.
+- [x] Keep generated vector data and Chroma telemetry local and untracked.
+
+### Evaluation and verification record
+
+- Installed Chroma `1.5.9` under Python 3.13.5. OpenTelemetry packages were
+  aligned with the existing LangGraph API; `pip check` reports no broken
+  requirements.
+- Focused Chroma/retrieval/config/tool tests: 31 passed in 4.34 seconds.
+- Full deterministic regression:
+  `python -m pytest --basetemp=.pytest_cache\\tmp\\chroma-full-3 -q` passed all
+  97 tests in 4.99 seconds.
+- OpenAI retrieval evaluation: all 15 committed cases passed; Hit@1 `1.000`,
+  Hit@3 `1.000`, MRR `1.000`, and no-evidence accuracy `1.000`.
+- Measured scores included relevant floor `0.321883`, unsupported ceiling
+  `0.242074`, and the harder English ambulance positive at `0.265540`.
+  Therefore `0.26` remains the measured cutoff; `0.27` would reject that known
+  relevant case.
+- `langgraph validate` passed with one graph. A live Luna canary passed evidence,
+  citation, required-fact, language, grounding, and overall checks at `1.000`.
+- `python -m compileall -q src scripts tests`, `pip check`, and
+  `git diff --check` passed. All local links across 10 Markdown files resolve;
+  JSON inputs parse; `.env`, `.venv/`, `.codex/`, SQLite, and `data/chroma/`
+  remain ignored; no populated API-key shape was found in the diff.
+
+## Next branch: demo UI and presentation
+
+After review and merge, create `feat/demo-ui` from updated `main`. Add a
+lightweight fictional profile selector, reviewer screenshots, final README
+requirement mapping, limitations, and presentation cleanup.
 
 ## Incremental roadmap
 
@@ -208,8 +280,8 @@ and any evaluation gaps discovered during reviewer-oriented testing.
    retrieval evaluation data, and the custom retrieval tool.
 4. **Agent workflow (complete)** - Data Retriever, Report Generator, explicit graph state,
    sequential LangGraph orchestration, and CLI smoke scenarios.
-5. **Evaluation and observability** - retrieval metrics, groundedness cases,
-   LangSmith tracing, and graph inspection.
+5. **Evaluation and observability (complete)** - retrieval/agent metrics,
+   groundedness cases, labeled LangSmith tracing, and compiled graph inspection.
 6. **Demo and presentation** - lightweight profile-selector UI, screenshots,
    reviewer documentation, limitations, and final regression review.
 

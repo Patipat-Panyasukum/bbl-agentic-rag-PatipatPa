@@ -99,6 +99,21 @@ def test_graph_returns_grounded_abstention_for_unsupported_query(tmp_path) -> No
     assert report_model.invocations == []
 
 
+def test_graph_anchors_agent_query_to_original_question(tmp_path) -> None:
+    report_model = EvidenceEchoReportModel()
+    graph, _ = _build_graph(tmp_path, "outpatient medical expenses", report_model)
+
+    result = graph.invoke(
+        {"employee_id": "E001", "user_query": "How many annual leave days do I have?"}
+    )
+
+    assert result["retrieval_query"] == "outpatient medical expenses"
+    assert result["evidence"] == []
+    assert result["final_answer"] == INSUFFICIENT_INFORMATION_RESPONSE
+    assert result["grounding_valid"] is True
+    assert report_model.invocations == []
+
+
 def test_graph_exposes_expected_sequential_nodes(tmp_path) -> None:
     graph, _ = _build_graph(
         tmp_path, "annual leave", EvidenceEchoReportModel()

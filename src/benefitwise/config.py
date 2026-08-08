@@ -15,6 +15,8 @@ from benefitwise.policy_parser import (
     DEFAULT_KNOWLEDGE_BASE_PATH,
     DEFAULT_POLICY_METADATA_PATH,
 )
+from benefitwise.retrieval import DEFAULT_MIN_SIMILARITY
+from benefitwise.vector_store import DEFAULT_CHROMA_PATH
 
 # Both agents have narrow, validated responsibilities, so the efficient Luna
 # tier is the cost-conscious default. Reviewers can still override it via env.
@@ -28,8 +30,9 @@ class AppSettings:
     database_path: Path = DEFAULT_DATABASE_PATH
     knowledge_base_path: Path = DEFAULT_KNOWLEDGE_BASE_PATH
     policy_metadata_path: Path = DEFAULT_POLICY_METADATA_PATH
+    chroma_path: Path = DEFAULT_CHROMA_PATH
     embedding_model: str = DEFAULT_EMBEDDING_MODEL
-    min_similarity: float = 0.26
+    min_similarity: float = DEFAULT_MIN_SIMILARITY
     top_k: int = 3
     openai_model: str = DEFAULT_OPENAI_MODEL
     openai_base_url: str | None = None
@@ -60,8 +63,11 @@ class AppSettings:
             policy_metadata_path=Path(
                 os.getenv("POLICY_METADATA_PATH", DEFAULT_POLICY_METADATA_PATH)
             ),
+            chroma_path=Path(os.getenv("CHROMA_PATH", DEFAULT_CHROMA_PATH)),
             embedding_model=os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL),
-            min_similarity=float(os.getenv("RETRIEVAL_MIN_SIMILARITY", "0.26")),
+            min_similarity=float(
+                os.getenv("RETRIEVAL_MIN_SIMILARITY", str(DEFAULT_MIN_SIMILARITY))
+            ),
             top_k=int(os.getenv("RETRIEVAL_TOP_K", "3")),
             openai_model=os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
             openai_base_url=os.getenv("OPENAI_BASE_URL") or None,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 
 from benefitwise.application import create_default_graph
+from benefitwise.observability import build_run_config
 
 
 def main() -> None:
@@ -20,7 +21,8 @@ def main() -> None:
 
     graph = create_default_graph()
     result = graph.invoke(
-        {"employee_id": args.employee_id, "user_query": args.query}
+        {"employee_id": args.employee_id, "user_query": args.query},
+        config=build_run_config(source="cli", employee_id=args.employee_id),
     )
 
     context = result["employee_context"]

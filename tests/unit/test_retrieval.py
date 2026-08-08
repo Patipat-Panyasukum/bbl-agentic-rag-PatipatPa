@@ -1,16 +1,39 @@
-"""Tests for eligibility-first cosine retrieval and Top-K behavior."""
+"""Tests for eligibility-first Chroma retrieval and Top-K behavior."""
 
+from collections.abc import Sequence
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from benefitwise.employee import EmployeeContext
+from benefitwise.policy import PolicyChunk
 from benefitwise.policy_parser import load_policy_chunks
-from benefitwise.retrieval import PolicyRetriever, cosine_similarities
+from benefitwise.retrieval import PolicyRetriever
+from benefitwise.vector_store import VectorMatch
 from tests.fakes import KeywordEmbeddings
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+class RecordingVectorStore:
+    """Record the exact candidate boundary passed from deterministic filtering."""
+
+    def __init__(self) -> None:
+        self.synchronized_policy_ids: tuple[str, ...] = ()
+        self.candidate_policy_ids: tuple[str, ...] = ()
+
+    def synchronize(self, policies: Sequence[PolicyChunk]) -> None:
+        self.synchronized_policy_ids = tuple(policy.policy_id for policy in policies)
+
+    def query(
+        self,
+        query_texts: Sequence[str],
+        *,
+        candidate_policy_ids: Sequence[str],
+    ) -> tuple[tuple[VectorMatch, ...], ...]:
+        self.candidate_policy_ids = tuple(candidate_policy_ids)
+        matches = tuple(VectorMatch(policy_id, 1.0) for policy_id in candidate_policy_ids)
+        return tuple(matches for _ in query_texts)
 
 
 @pytest.fixture
@@ -65,16 +88,23 @@ def test_paraphrased_query_retrieves_relevant_policy(policies) -> None:
     assert evidence[0].policy_id == "MED-OPD-GENERAL-JL2-8"
 
 
-def test_eligibility_filter_runs_before_embedding(policies) -> None:
+def test_eligibility_filter_becomes_vector_database_candidate_filter(policies) -> None:
     employee = EmployeeContext("E001", "JL3", "TH", "DEMO", "General")
-    embeddings = KeywordEmbeddings()
-    retriever = PolicyRetriever(policies, embeddings, min_similarity=0.1)
+    vector_store = RecordingVectorStore()
+    retriever = PolicyRetriever(
+        policies,
+        KeywordEmbeddings(),
+        min_similarity=0.1,
+        vector_store=vector_store,
+    )
 
     retriever.retrieve("outpatient medical", employee)
 
-    embedded_policy_text = "\n".join(embeddings.batches[0][1:])
-    assert "4.4.1.1 คนไข้นอก (Outpatient: OPD)" in embedded_policy_text
-    assert "พนักงานปฏิบัติการ ระดับ JL1" not in embedded_policy_text
+    assert set(vector_store.synchronized_policy_ids) == {
+        policy.policy_id for policy in policies
+    }
+    assert "MED-OPD-GENERAL-JL2-8" in vector_store.candidate_policy_ids
+    assert "MED-OPD-OPERATIONS-JL1" not in vector_store.candidate_policy_ids
 
 
 def test_top_k_limits_ranked_results(policies) -> None:
@@ -92,6 +122,24 @@ def test_irrelevant_query_returns_no_evidence(policies) -> None:
     retriever = PolicyRetriever(policies, KeywordEmbeddings(), min_similarity=0.1)
 
     assert retriever.retrieve("Where can I park my car?", employee) == ()
+
+
+def test_original_query_anchors_agent_reformulation(policies) -> None:
+    employee = EmployeeContext("E001", "JL3", "TH", "DEMO", "General")
+    embeddings = KeywordEmbeddings()
+    retriever = PolicyRetriever(policies, embeddings, min_similarity=0.1)
+
+    evidence = retriever.retrieve(
+        "outpatient medical benefit",
+        employee,
+        reference_query="annual leave days",
+    )
+
+    assert evidence == ()
+    assert embeddings.batches[-1] == [
+        "outpatient medical benefit",
+        "annual leave days",
+    ]
 
 
 def test_employee_with_no_eligible_policies_skips_embedding(policies) -> None:
@@ -119,12 +167,3 @@ def test_rejects_invalid_top_k(policies, top_k, error) -> None:
 
     with pytest.raises(error):
         retriever.retrieve("annual leave", employee, top_k=top_k)
-
-
-def test_cosine_similarities_handles_zero_vectors() -> None:
-    scores = cosine_similarities(
-        np.asarray([1.0, 0.0], dtype=np.float32),
-        np.asarray([[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]], dtype=np.float32),
-    )
-
-    np.testing.assert_allclose(scores, [1.0, 0.0, 0.0])

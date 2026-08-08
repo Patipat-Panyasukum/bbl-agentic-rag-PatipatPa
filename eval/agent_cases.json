@@ -1,0 +1,92 @@
+[
+  {
+    "case_id": "opd-general-e001-en",
+    "employee_id": "E001",
+    "query": "How much can I claim for outpatient medical expenses?",
+    "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"],
+    "required_answer_terms": ["14,250"],
+    "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "opd-operations-e003-en",
+    "employee_id": "E003",
+    "query": "How much OPD can I claim per visit and how many visits per year?",
+    "expected_policy_ids": ["MED-OPD-OPERATIONS-JL1"],
+    "required_answer_terms": ["300", "15"],
+    "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "ipd-general-e002-th",
+    "employee_id": "E002",
+    "query": "วงเงินผู้ป่วยในและค่าห้องของฉันเท่าไร",
+    "expected_policy_ids": ["MED-IPD-GENERAL-JL2-8"],
+    "required_answer_terms": ["60,000", "300,000", "3,500", "31"],
+    "expected_language": "th",
+    "should_abstain": false
+  },
+  {
+    "case_id": "social-security-e003-th",
+    "employee_id": "E003",
+    "query": "ต้องใช้สิทธิประกันสังคมก่อนเบิกค่ารักษาหรือไม่",
+    "expected_policy_ids": ["MED-SCOPE-OPERATIONS-JL1"],
+    "required_answer_terms": ["ประกันสังคม"],
+    "expected_language": "th",
+    "should_abstain": false
+  },
+  {
+    "case_id": "day-case-e001-en",
+    "employee_id": "E001",
+    "query": "Is a same-day endoscopy treated as a Day Case?",
+    "expected_policy_ids": ["MED-DAYCASE-GENERAL-JL2-8"],
+    "required_answer_terms": ["endoscopy"],
+    "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "ambulance-e002-en",
+    "employee_id": "E002",
+    "query": "Is an emergency ambulance a covered medical expense?",
+    "expected_policy_ids": ["MED-COVERED-GENERAL-JL2-8"],
+    "required_answer_terms": ["ambulance"],
+    "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "claim-documents-e001-en",
+    "employee_id": "E001",
+    "query": "Which documents do I need to submit for medical reimbursement?",
+    "expected_policy_ids": ["MED-CLAIM-GENERAL-JL2-8"],
+    "required_answer_terms": ["receipt", "medical certificate"],
+    "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "overseas-accident-e001-en",
+    "employee_id": "E001",
+    "query": "If I become ill while working overseas, which insurance must I use first?",
+    "expected_policy_ids": ["MED-ACCIDENT-GENERAL-JL2-8"],
+    "required_answer_terms": ["travel insurance"],
+    "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "unsupported-leave-e001-en",
+    "employee_id": "E001",
+    "query": "How many annual leave days do I have?",
+    "expected_policy_ids": [],
+    "required_answer_terms": [],
+    "expected_language": "en",
+    "should_abstain": true
+  },
+  {
+    "case_id": "unsupported-parking-e003-en",
+    "employee_id": "E003",
+    "query": "Where can I park my car at the office?",
+    "expected_policy_ids": [],
+    "required_answer_terms": [],
+    "expected_language": "en",
+    "should_abstain": true
+  }
+]

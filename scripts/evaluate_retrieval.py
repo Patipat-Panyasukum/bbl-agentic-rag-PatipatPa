@@ -20,7 +20,8 @@ from benefitwise.policy_parser import (
     DEFAULT_POLICY_METADATA_PATH,
     load_policy_chunks,
 )
-from benefitwise.retrieval import PolicyRetriever
+from benefitwise.retrieval import DEFAULT_MIN_SIMILARITY, PolicyRetriever
+from benefitwise.vector_store import DEFAULT_CHROMA_PATH
 
 
 def main() -> None:
@@ -30,9 +31,12 @@ def main() -> None:
     parser.add_argument("--knowledge-base", type=Path, default=DEFAULT_KNOWLEDGE_BASE_PATH)
     parser.add_argument("--metadata", type=Path, default=DEFAULT_POLICY_METADATA_PATH)
     parser.add_argument("--database", type=Path, default=DEFAULT_DATABASE_PATH)
+    parser.add_argument("--chroma-path", type=Path, default=DEFAULT_CHROMA_PATH)
     parser.add_argument("--model", default=DEFAULT_EMBEDDING_MODEL)
     parser.add_argument("--top-k", type=int, default=3)
-    parser.add_argument("--min-similarity", type=float, default=0.26)
+    parser.add_argument(
+        "--min-similarity", type=float, default=DEFAULT_MIN_SIMILARITY
+    )
     args = parser.parse_args()
 
     initialize_employee_database(args.database)
@@ -45,6 +49,8 @@ def main() -> None:
             base_url=os.getenv("OPENAI_BASE_URL") or None,
         ),
         min_similarity=args.min_similarity,
+        chroma_path=args.chroma_path,
+        embedding_model_id=args.model,
     )
     evaluation = evaluate_retrieval(
         retriever,

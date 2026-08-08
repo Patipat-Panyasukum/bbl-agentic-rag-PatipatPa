@@ -2,6 +2,7 @@ langgraph
 langchain
 langchain-openai
 langgraph-cli[inmem]
+chromadb
 numpy
 python-dotenv
 pytest

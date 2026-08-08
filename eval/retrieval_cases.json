@@ -75,6 +75,12 @@
     "expected_policy_ids": ["MED-ACCIDENT-GENERAL-JL2-8"]
   },
   {
+    "case_id": "ambulance-e002-en-threshold-boundary",
+    "employee_id": "E002",
+    "query": "Is an emergency ambulance a covered medical expense?",
+    "expected_policy_ids": ["MED-COVERED-GENERAL-JL2-8"]
+  },
+  {
     "case_id": "unsupported-leave",
     "employee_id": "E001",
     "query": "How many annual leave days do I have?",

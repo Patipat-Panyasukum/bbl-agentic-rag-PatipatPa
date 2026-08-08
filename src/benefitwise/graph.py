@@ -68,7 +68,11 @@ def build_benefit_graph(
     def retrieval_tool(state: BenefitWiseState) -> dict[str, object]:
         # Rebuild the employee-bound tool from trusted state instead of storing
         # a non-serializable tool object inside LangGraph state.
-        tool = build_policy_retrieval_tool(retriever, state["employee_context"])
+        tool = build_policy_retrieval_tool(
+            retriever,
+            state["employee_context"],
+            reference_query=state["user_query"],
+        )
         result = tool.invoke(state["retrieval_tool_call"])
         if not isinstance(result, ToolMessage):
             raise AgentProtocolError("Retrieval tool did not return a ToolMessage")

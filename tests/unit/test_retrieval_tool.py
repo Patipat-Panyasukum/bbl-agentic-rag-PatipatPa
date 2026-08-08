@@ -50,4 +50,23 @@ def test_tool_reports_no_evidence_for_irrelevant_query() -> None:
 
     content = tool.invoke({"query": "employee parking location", "top_k": 3})
 
-    assert content == "No eligible relevant policy evidence was found in the knowledge base."
+    assert content == (
+        "No eligible relevant policy evidence was found in the knowledge base."
+    )
+
+
+def test_tool_keeps_original_question_as_hidden_relevance_anchor() -> None:
+    policies = load_policy_chunks(PROJECT_ROOT / "knowledge_base.txt")
+    retriever = PolicyRetriever(policies, KeywordEmbeddings(), min_similarity=0.1)
+    tool = build_policy_retrieval_tool(
+        retriever,
+        EmployeeContext("E001", "JL3", "TH", "DEMO", "General"),
+        reference_query="annual leave days",
+    )
+
+    content = tool.invoke({"query": "outpatient medical benefit", "top_k": 3})
+
+    assert set(tool.args) == {"query", "top_k"}
+    assert content == (
+        "No eligible relevant policy evidence was found in the knowledge base."
+    )
