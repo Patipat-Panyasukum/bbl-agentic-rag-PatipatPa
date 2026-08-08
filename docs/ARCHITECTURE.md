@@ -2,10 +2,9 @@
 
 ## Status and goal
 
-This document distinguishes the implemented core RAG from the planned agentic
-workflow. Employee context, policy parsing/filtering, semantic retrieval, and
-the employee-bound LangChain tool are implemented. The agents, LangGraph graph,
-answer generation, and UI remain planned.
+Employee context, policy parsing/filtering, semantic retrieval, the
+employee-bound tool, both agents, and sequential LangGraph orchestration are
+implemented. The UI and production-oriented observability remain planned.
 
 BenefitWise AI will answer employee-benefit questions using a trusted employee
 profile, eligible policy evidence from local `knowledge_base.txt`, and two
@@ -20,7 +19,8 @@ flowchart TD
     DB[(SQLite employee database)] --> EC
     EC -->|trusted EmployeeContext + question| DR[Data Retriever Agent]
     DR -->|search request| RT[Custom Retrieval Tool]
-    KB[knowledge_base.txt] --> PP[Policy Parser]
+    KB[knowledge_base.txt: policy prose] --> PP[Policy Ingestion]
+    PM[policy_metadata.json: derived metadata] --> PP
     PP --> EF[Eligibility Filter]
     EC -->|trusted metadata| EF
     EF --> SR[Embedding + Cosine Similarity]
@@ -46,7 +46,8 @@ The intended sequence is fixed:
 | --- | --- | --- |
 | UI / CLI | Select a demo profile and submit a question | Infer eligibility |
 | Employee Context Service | Resolve employee metadata deterministically | Call an LLM |
-| Policy Parser | Turn the text knowledge base into structured chunks | Decide user identity |
+| Policy Ingestion | Join numbered source sections with validated sidecar metadata | Put retrieval metadata into policy prose |
+| Metadata Sidecar | Map sections to IDs, search terms, and eligibility rules | Act as user-visible policy evidence |
 | Eligibility Filter | Apply explicit policy metadata rules | Use semantic similarity as an eligibility rule |
 | Data Retriever Agent | Decide what to search for and call the retrieval tool | Produce the final user answer |
 | Retrieval Tool | Filter, rank, and return evidence | Accept LLM-authored identity as trusted input |
@@ -75,33 +76,68 @@ employees(employee_id PRIMARY KEY, job_level, country, company, employee_type)
 
 ### Implemented policy and retrieval layer
 
-The strict parser converts 12 blocks in `knowledge_base.txt` into immutable
-`PolicyChunk` values. It rejects missing, duplicate, unknown, empty, or invalid
-metadata instead of broadening eligibility. `PolicyEligibility` matches country,
-company, employee type, and numeric job-level range.
+`knowledge_base.txt` contains sanitized policy prose with natural numbered
+sections and no retrieval fields or custom block markers. It is a neutral demo
+adaptation of the supplied Thai source: personal names, signatures,
+organization branding, internal approval data, extraction coordinates/IDs,
+and masked or struck-through text are excluded.
+
+`policy_metadata.json` is authored by the application team. It maps source
+section IDs to stable policy IDs, bilingual retrieval terms, and deterministic
+country/company/employee-type/job-level rules. The ingestion parser validates
+both files, locates the referenced numbered sections, and builds 12 immutable
+`PolicyChunk` values. Missing sections, duplicate IDs, malformed metadata, and
+invalid ranges fail closed. Retrieval terms participate only in embedding;
+`PolicyEvidence` contains the original section title/text and eligibility data,
+never the search terms.
 
 `PolicyRetriever` performs this fixed sequence:
 
 1. Validate the query and Top-K value.
 2. Filter policies using trusted `EmployeeContext`.
-3. Embed only the query and eligible policy text.
-4. Calculate cosine similarity and apply the `0.25` relevance threshold.
+3. Embed only the query and eligible policy text plus its sidecar search terms.
+4. Calculate cosine similarity and apply the `0.26` relevance threshold.
 5. Sort by descending score with policy ID as a deterministic tie-breaker.
 6. Return up to Top-K `PolicyEvidence` objects containing raw policy text.
 
-The default embedding adapter lazily loads
-`sentence-transformers/all-MiniLM-L6-v2`. Tests inject a deterministic embedding
-provider, while the committed evaluation runs the real model.
+The default embedding adapter lazily creates an OpenAI client for
+`text-embedding-3-small`. It sends the query and only the already-eligible
+policy contexts as one embedding batch. Tests inject a deterministic embedding
+provider, while the committed evaluation calls the real API.
 
 `build_policy_retrieval_tool` binds `EmployeeContext` in a closure. Its
 model-visible schema contains only `query` and `top_k`. The tool returns readable
 raw evidence as content and the same evidence as structured artifacts for the
-future Data Retriever Agent.
+Data Retriever Agent.
+
+### Implemented two-agent graph
+
+The compiled graph has four sequential nodes:
+
+```text
+resolve_employee
+  -> data_retriever_agent
+  -> retrieval_tool
+  -> report_generator_agent
+  -> END
+```
+
+The Data Retriever Agent is bound to the employee-scoped tool with forced tool
+choice. It must emit exactly one call and cannot provide a direct answer. The
+tool is rebuilt from trusted state in the next node, preserving serialization
+and ensuring model arguments never select identity or eligibility.
+
+The Report Generator receives trusted employee context and structured evidence
+but no tools. With no evidence, the node returns a deterministic
+insufficient-information response without invoking the model. With evidence,
+the model must cite policy IDs; deterministic validation rejects unknown
+citations and numeric claims absent from trusted context/evidence, failing
+closed instead of releasing an unsupported answer.
 
 ## Conceptual contracts
 
-The employee, retrieval, and evidence contracts are implemented Python APIs.
-Graph state remains a planned contract for the agent branch.
+The employee, retrieval, evidence, graph input, state, and output contracts are
+implemented Python APIs.
 
 ### Employee context
 
@@ -128,12 +164,17 @@ Graph state remains a planned contract for the agent branch.
 ### Graph state
 
 - `user_query`
+- `employee_id`
 - `employee_context`
+- `retrieval_tool_call`
+- `retrieval_query`
 - `evidence`: ordered list of policy evidence
 - `final_answer`
+- `grounding_valid`
 
-The future implementation should use explicit typed state so each node's input
-and output can be tested independently.
+The public graph input contains only employee ID and user query. The public
+output contains trusted context, retrieval query, evidence, final answer, and
+grounding status; the raw tool call remains internal state.
 
 ## Failure behavior
 

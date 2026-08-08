@@ -2,7 +2,6 @@ langgraph
 langchain
 langchain-openai
 langgraph-cli[inmem]
-sentence-transformers
 numpy
 python-dotenv
 pytest

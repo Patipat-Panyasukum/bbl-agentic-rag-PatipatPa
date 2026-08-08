@@ -1,173 +1,110 @@
-# BenefitWise AI demo policy knowledge base.
-#
-# Each policy carries explicit eligibility metadata. The application filters on
-# these fields before it performs semantic ranking.
+นโยบายสวัสดิการค่ารักษาพยาบาล
+สำหรับพนักงาน JL2-JL8 และพนักงานปฏิบัติการระดับ JL1
 
-[POLICY]
-policy_id = MED-OPD-JL1-4
-title = Outpatient medical benefit for JL1-JL4
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 1
-max_job_level = 4
-content =
-Permanent BBL employees in Thailand at job levels JL1 through JL4 may claim up
-to THB 20,000 per calendar year for eligible outpatient medical expenses.
-Claims require an itemized receipt and a medical certificate when requested.
-[/POLICY]
+1. หลักการและเหตุผล
 
-[POLICY]
-policy_id = MED-OPD-JL5-7
-title = Outpatient medical benefit for JL5-JL7
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 5
-max_job_level = 7
-content =
-Permanent BBL employees in Thailand at job levels JL5 through JL7 may claim up
-to THB 40,000 per calendar year for eligible outpatient medical expenses.
-Claims require an itemized receipt and a medical certificate when requested.
-[/POLICY]
+บริษัทฯ ให้ความสำคัญกับสุขภาพและพลานามัยที่ดีของพนักงาน จึงจัดสวัสดิการ
+รักษาพยาบาลเพื่อช่วยเหลือค่าใช้จ่ายเมื่อพนักงานเจ็บป่วยและจำเป็นต้องเข้ารับ
+การรักษาในโรงพยาบาลหรือสถานพยาบาลภายนอก ตามหลักเกณฑ์และเงื่อนไขที่กำหนด
 
-[POLICY]
-policy_id = MED-OPD-JL8-10
-title = Outpatient medical benefit for JL8-JL10
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 8
-max_job_level = 10
-content =
-Permanent BBL employees in Thailand at job levels JL8 through JL10 may claim up
-to THB 80,000 per calendar year for eligible outpatient medical expenses.
-Claims require an itemized receipt and a medical certificate when requested.
-[/POLICY]
+2. ขอบเขต
 
-[POLICY]
-policy_id = MED-INPATIENT-JL1-4
-title = Inpatient medical benefit for JL1-JL4
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 1
-max_job_level = 4
-content =
-Permanent BBL employees in Thailand at job levels JL1 through JL4 receive
-inpatient medical coverage up to THB 300,000 per calendar year, subject to the
-insurer's covered-treatment and pre-authorization rules.
-[/POLICY]
+2.1 พนักงานทั่วไป ระดับ JL2-JL8
 
-[POLICY]
-policy_id = MED-INPATIENT-JL5-7
-title = Inpatient medical benefit for JL5-JL7
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 5
-max_job_level = 7
-content =
-Permanent BBL employees in Thailand at job levels JL5 through JL7 receive
-inpatient medical coverage up to THB 600,000 per calendar year, subject to the
-insurer's covered-treatment and pre-authorization rules.
-[/POLICY]
+พนักงานทั่วไประดับ JL2-JL8 มีสิทธิเบิกค่ารักษาพยาบาลทั้งกรณีผู้ป่วยนอก
+(OPD) และผู้ป่วยใน (IPD) รวมถึงพนักงานที่อยู่ระหว่างทดลองงาน แต่ไม่รวม
+พนักงานสัญญาจ้างที่กำหนดระยะเวลาจ้างแน่นอน เว้นแต่สัญญาจ้างระบุให้ได้รับ
+สิทธิสวัสดิการค่ารักษาพยาบาล
 
-[POLICY]
-policy_id = MED-INPATIENT-JL8-10
-title = Inpatient medical benefit for JL8-JL10
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 8
-max_job_level = 10
-content =
-Permanent BBL employees in Thailand at job levels JL8 through JL10 receive
-inpatient medical coverage up to THB 1,200,000 per calendar year, subject to
-the insurer's covered-treatment and pre-authorization rules.
-[/POLICY]
+2.2 พนักงานปฏิบัติการ ระดับ JL1
 
-[POLICY]
-policy_id = MED-DENTAL-ALL
-title = Dental benefit for permanent employees
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 1
-max_job_level = 10
-content =
-Permanent BBL employees in Thailand may claim up to THB 15,000 per calendar
-year for dental examination, cleaning, filling, extraction, and root-canal
-treatment. Cosmetic dentistry is not covered.
-[/POLICY]
+พนักงานปฏิบัติการรายเดือนและรายวันระดับ JL1 มีสิทธิเบิกค่ารักษาพยาบาล
+ผู้ป่วยนอก (OPD) และผู้ป่วยใน (IPD) โดยต้องใช้สิทธิกองทุนประกันสังคม
+กองทุนเงินทดแทน หรือสิทธิตามกฎหมายอื่นก่อน ค่าใช้จ่ายส่วนเกินหรือส่วนที่
+สิทธิหลักไม่คุ้มครองจึงนำมาเบิกได้ตามวงเงินและเงื่อนไขของนโยบาย
 
-[POLICY]
-policy_id = LEAVE-ANNUAL-JL1-4
-title = Annual leave entitlement for JL1-JL4
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 1
-max_job_level = 4
-content =
-Permanent BBL employees in Thailand at job levels JL1 through JL4 receive 12
-working days of paid annual leave per calendar year. Leave requires manager
-approval and must follow the company's carry-over rules.
-[/POLICY]
+3. คำจำกัดความ
 
-[POLICY]
-policy_id = LEAVE-ANNUAL-JL5-7
-title = Annual leave entitlement for JL5-JL7
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 5
-max_job_level = 7
-content =
-Permanent BBL employees in Thailand at job levels JL5 through JL7 receive 15
-working days of paid annual leave per calendar year. Leave requires manager
-approval and must follow the company's carry-over rules.
-[/POLICY]
+3.6 ผู้ป่วยนอก
 
-[POLICY]
-policy_id = LEAVE-ANNUAL-JL8-10
-title = Annual leave entitlement for JL8-JL10
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 8
-max_job_level = 10
-content =
-Permanent BBL employees in Thailand at job levels JL8 through JL10 receive 20
-working days of paid annual leave per calendar year. Leave requires manager
-approval and must follow the company's carry-over rules.
-[/POLICY]
+ผู้ป่วยนอก หมายถึง ผู้ที่เข้ารับการรักษาพยาบาลโดยไม่จำเป็นต้องพักรักษาตัว
+ในสถานพยาบาล รวมถึงการรับบริการที่คลินิกหรือแผนกผู้ป่วยนอก
 
-[POLICY]
-policy_id = TRAVEL-INTL-JL5-7
-title = International business travel for JL5-JL7
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 5
-max_job_level = 7
-content =
-Permanent BBL employees in Thailand at job levels JL5 through JL7 may travel
-internationally for approved business purposes in economy class. The trip must
-be approved in advance by the employee's manager and cost center owner.
-[/POLICY]
+3.8 การรักษาแบบ Day Case
 
-[POLICY]
-policy_id = TRAVEL-INTL-JL8-10
-title = International business travel for JL8-JL10
-countries = TH
-companies = BBL
-employee_types = PERMANENT
-min_job_level = 8
-max_job_level = 10
-content =
-Permanent BBL employees in Thailand at job levels JL8 through JL10 may travel
-internationally for approved business purposes. Business class is permitted
-for a scheduled flight longer than six hours; otherwise economy class applies.
-The trip must be approved in advance by the cost center owner.
-[/POLICY]
+Day Case หมายถึง การรักษาหรือหัตถการที่ผู้ป่วยกลับบ้านได้ในวันเดียวและ
+ไม่ต้องพักรักษาตัวเกิน 6 ชั่วโมง โดยจ่ายค่าใช้จ่ายเฉพาะวันที่เข้ารับบริการ
+แบบผู้ป่วยนอก ตัวอย่างเช่น การสลายนิ่ว การตัดชิ้นเนื้อ การผ่าตัดต้อกระจก
+การส่องกล้องเพื่อวินิจฉัย และการผ่าตัดผ่านกล้อง การรักษาอื่นนอกเหนือจาก
+รายการที่กำหนดต้องผ่านการพิจารณาตามขั้นตอนของบริษัทฯ
+
+4. หลักเกณฑ์และเงื่อนไข
+
+4.2 รายการค่ารักษาพยาบาลที่อยู่ในขอบเขตความช่วยเหลือ
+
+รายการที่อยู่ในขอบเขตความช่วยเหลือประกอบด้วยค่ายา เวชภัณฑ์ เครื่องมือแพทย์
+ค่าตรวจและวินิจฉัย ค่าห้องปฏิบัติการและรังสีวิทยา ค่าแพทย์และพยาบาล
+ค่าผ่าตัดและวิสัญญี ค่าห้องพักและอาหาร ห้องผ่าตัด ห้องผู้ป่วยหนัก (ICU)
+และค่ารถพยาบาลเมื่อเป็นเหตุฉุกเฉินหรือแพทย์เห็นว่าจำเป็น
+
+การทำฟัน การรักษาสายตา การใส่อวัยวะเทียม หรือศัลยกรรมตกแต่งที่เกิดจาก
+อุบัติเหตุ ให้ใช้สิทธิประกันอุบัติเหตุก่อน
+
+4.4 วงเงินค่ารักษาพยาบาล
+
+4.4.1 พนักงานทั่วไป ระดับ JL2-JL8
+
+4.4.1.1 คนไข้นอก (Outpatient: OPD)
+
+เบิกค่ารักษาพยาบาลผู้ป่วยนอกได้ไม่เกิน 14,250 บาทต่อปี
+(THB 14,250 per year)
+
+4.4.1.2 คนไข้ใน (Inpatient: IPD)
+
+เบิกค่ารักษาพยาบาลทั่วไปได้ไม่เกิน 60,000 บาทต่อครั้ง
+(THB 60,000 per admission) และรวมไม่เกิน 300,000 บาทต่อปี
+(THB 300,000 per year)
+
+ค่าห้องรวมค่าอาหารเบิกตามจริงไม่เกิน 3,500 บาทต่อวัน
+(THB 3,500 per day) สูงสุด 31 วันต่อการเข้ารักษาพยาบาลหนึ่งครั้ง
+
+4.4.1.3 อุบัติเหตุและการรักษาพยาบาลในต่างประเทศ
+
+กรณีอุบัติเหตุ ให้ใช้สิทธิประกันอุบัติเหตุกลุ่ม กองทุนเงินทดแทน หรือสิทธิ
+ตามกฎหมายที่เกี่ยวข้องก่อน แล้วจึงเบิกส่วนเกินได้ภายในวงเงินของนโยบายนี้
+
+กรณีเจ็บป่วยหรือบาดเจ็บระหว่างปฏิบัติงานต่างประเทศ ให้ใช้ประกันการเดินทาง
+ก่อน และยื่นใบรับรองแพทย์กับใบเสร็จรับเงินเพื่อพิจารณาค่าใช้จ่ายส่วนเกิน
+
+4.4.2 พนักงานปฏิบัติการ ระดับ JL1
+
+4.4.2.1 คนไข้นอก (Outpatient: OPD)
+
+หลังใช้สิทธิหลักแล้ว พนักงานปฏิบัติการระดับ JL1 เบิกค่ารักษาพยาบาล
+ผู้ป่วยนอกส่วนเกินได้ไม่เกิน 300 บาทต่อครั้ง (THB 300 per visit)
+และไม่เกิน 15 ครั้งต่อปี (15 visits per year)
+
+4.4.2.2 คนไข้ใน (Inpatient: IPD)
+
+หลังใช้สิทธิหลักแล้ว พนักงานปฏิบัติการระดับ JL1 เบิกค่ารักษาพยาบาล
+ผู้ป่วยในส่วนเกินได้เต็มจำนวนครั้งละไม่เกิน 20,000 บาท
+(THB 20,000 per admission) และรวมไม่เกิน 150,000 บาทต่อปี
+(THB 150,000 per year)
+
+ค่าห้องรวมค่าอาหารเบิกได้ไม่เกิน 1,000 บาทต่อวัน
+(THB 1,000 per day) สูงสุด 31 วันต่อการเข้ารักษาพยาบาลหนึ่งครั้ง
+
+5. ขั้นตอนการดำเนินการ
+
+5.1 การเบิกค่ารักษาพยาบาลของพนักงานระดับ JL2-JL8
+
+พนักงานสำรองค่าใช้จ่ายก่อน แล้วนำใบเสร็จรับเงินและใบรับรองแพทย์ฉบับจริง
+ยื่นขอเบิกผ่านระบบตามรอบและขั้นตอนที่บริษัทฯ กำหนด หน่วยงานทรัพยากรบุคคล
+ตรวจเอกสารและดำเนินการจ่ายผ่านระบบเงินเดือน
+
+5.2 การใช้สิทธิของพนักงานปฏิบัติการระดับ JL1
+
+พนักงานต้องใช้โรงพยาบาลและสิทธิกองทุนประกันสังคมตามที่ระบุก่อน
+กรณีฉุกเฉิน อุบัติเหตุ หรือมีค่าใช้จ่ายส่วนเกิน ให้สำรองจ่ายแล้วส่ง
+ใบเสร็จรับเงินและใบรับรองแพทย์แก่หน่วยงานทรัพยากรบุคคลเพื่อบันทึกและ
+ดำเนินการจ่ายผ่านระบบเงินเดือน

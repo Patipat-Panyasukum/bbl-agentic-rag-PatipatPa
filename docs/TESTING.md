@@ -16,6 +16,8 @@ Test deterministic components independently:
 
 - employee lookup and unknown employee behavior
 - policy parsing and malformed chunks
+- policy prose remains free of retrieval metadata and custom block markers
+- sidecar schema, missing section references, and source/metadata joining
 - eligibility rules across employee metadata
 - cosine-similarity ordering, ties, and Top-K limits
 - empty candidates and irrelevant input
@@ -26,7 +28,8 @@ Using fixed employees and expected policy IDs, verify that:
 
 - a direct question retrieves the expected eligible policy
 - paraphrases retrieve the same relevant policy
-- the same question returns different eligible evidence for E001, E002, and E003
+- the same question returns profile-appropriate evidence: E001/E002 share the
+  JL2-JL8 General policy while E003 receives the Operations JL1 policy
 - ineligible policies are removed before semantic ranking
 - unsupported questions return no usable evidence
 
@@ -106,6 +109,17 @@ before embedding, cosine/zero-vector behavior, Top-K, irrelevant queries,
 tool-schema identity protection, tool artifacts, dataset validation, and metric
 calculation.
 
-The real-model evaluation uses 13 committed cases and currently records Hit@1,
-Hit@3, MRR, and no-evidence accuracy of `1.000`. See
-[the evaluation report](../eval/RESULTS.md) for configuration and limitations.
+The OpenAI embedding evaluation uses 14 committed English/Thai cases and
+currently records Hit@1 `1.000`, Hit@3 `1.000`, MRR `1.000`, and no-evidence
+accuracy `1.000`. See [the evaluation report](../eval/RESULTS.md) for
+configuration and limitations.
+
+Agent and graph coverage verifies forced retrieval-tool use, model-visible tool
+arguments, no direct Retriever answer, evidence delivery to the Report
+Generator, unknown citations/numeric hallucination rejection, no-evidence
+abstention without an LLM call, state propagation, node presence, unknown
+employee short-circuiting, and personalized E001/E002/E003 graph results.
+
+API-backed smoke verification is deliberately separate from pytest. It checks
+provider compatibility and real prompt/tool behavior while keeping normal tests
+fast, deterministic, and free of API cost.
