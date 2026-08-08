@@ -1,0 +1,52 @@
+"""Tests for the employee-bound LangChain retrieval tool."""
+
+from pathlib import Path
+
+from langchain_core.messages import ToolMessage
+
+from benefitwise.employee import EmployeeContext
+from benefitwise.policy_parser import load_policy_chunks
+from benefitwise.retrieval import PolicyRetriever
+from benefitwise.retrieval_tool import build_policy_retrieval_tool
+from tests.fakes import KeywordEmbeddings
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _build_tool(employee: EmployeeContext):
+    policies = load_policy_chunks(PROJECT_ROOT / "knowledge_base.txt")
+    retriever = PolicyRetriever(policies, KeywordEmbeddings(), min_similarity=0.1)
+    return build_policy_retrieval_tool(retriever, employee)
+
+
+def test_tool_schema_does_not_expose_employee_identity() -> None:
+    tool = _build_tool(EmployeeContext("E001", "JL3", "TH", "BBL", "Permanent"))
+
+    assert set(tool.args) == {"query", "top_k"}
+
+
+def test_tool_returns_raw_employee_specific_evidence() -> None:
+    tool = _build_tool(EmployeeContext("E001", "JL3", "TH", "BBL", "Permanent"))
+
+    result = tool.invoke(
+        {
+            "name": tool.name,
+            "args": {"query": "outpatient medical claim", "top_k": 1},
+            "id": "tool-call-1",
+            "type": "tool_call",
+        }
+    )
+
+    assert isinstance(result, ToolMessage)
+    assert "MED-OPD-JL1-4" in result.content
+    assert "THB 20,000" in result.content
+    assert "MED-OPD-JL5-7" not in result.content
+    assert result.artifact[0]["policy_id"] == "MED-OPD-JL1-4"
+
+
+def test_tool_reports_no_evidence_for_irrelevant_query() -> None:
+    tool = _build_tool(EmployeeContext("E003", "JL9", "TH", "BBL", "Permanent"))
+
+    content = tool.invoke({"query": "employee parking location", "top_k": 3})
+
+    assert content == "No eligible relevant policy evidence was found in the knowledge base."

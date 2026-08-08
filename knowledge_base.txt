@@ -1,0 +1,173 @@
+# BenefitWise AI demo policy knowledge base.
+#
+# Each policy carries explicit eligibility metadata. The application filters on
+# these fields before it performs semantic ranking.
+
+[POLICY]
+policy_id = MED-OPD-JL1-4
+title = Outpatient medical benefit for JL1-JL4
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 1
+max_job_level = 4
+content =
+Permanent BBL employees in Thailand at job levels JL1 through JL4 may claim up
+to THB 20,000 per calendar year for eligible outpatient medical expenses.
+Claims require an itemized receipt and a medical certificate when requested.
+[/POLICY]
+
+[POLICY]
+policy_id = MED-OPD-JL5-7
+title = Outpatient medical benefit for JL5-JL7
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 5
+max_job_level = 7
+content =
+Permanent BBL employees in Thailand at job levels JL5 through JL7 may claim up
+to THB 40,000 per calendar year for eligible outpatient medical expenses.
+Claims require an itemized receipt and a medical certificate when requested.
+[/POLICY]
+
+[POLICY]
+policy_id = MED-OPD-JL8-10
+title = Outpatient medical benefit for JL8-JL10
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 8
+max_job_level = 10
+content =
+Permanent BBL employees in Thailand at job levels JL8 through JL10 may claim up
+to THB 80,000 per calendar year for eligible outpatient medical expenses.
+Claims require an itemized receipt and a medical certificate when requested.
+[/POLICY]
+
+[POLICY]
+policy_id = MED-INPATIENT-JL1-4
+title = Inpatient medical benefit for JL1-JL4
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 1
+max_job_level = 4
+content =
+Permanent BBL employees in Thailand at job levels JL1 through JL4 receive
+inpatient medical coverage up to THB 300,000 per calendar year, subject to the
+insurer's covered-treatment and pre-authorization rules.
+[/POLICY]
+
+[POLICY]
+policy_id = MED-INPATIENT-JL5-7
+title = Inpatient medical benefit for JL5-JL7
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 5
+max_job_level = 7
+content =
+Permanent BBL employees in Thailand at job levels JL5 through JL7 receive
+inpatient medical coverage up to THB 600,000 per calendar year, subject to the
+insurer's covered-treatment and pre-authorization rules.
+[/POLICY]
+
+[POLICY]
+policy_id = MED-INPATIENT-JL8-10
+title = Inpatient medical benefit for JL8-JL10
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 8
+max_job_level = 10
+content =
+Permanent BBL employees in Thailand at job levels JL8 through JL10 receive
+inpatient medical coverage up to THB 1,200,000 per calendar year, subject to
+the insurer's covered-treatment and pre-authorization rules.
+[/POLICY]
+
+[POLICY]
+policy_id = MED-DENTAL-ALL
+title = Dental benefit for permanent employees
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 1
+max_job_level = 10
+content =
+Permanent BBL employees in Thailand may claim up to THB 15,000 per calendar
+year for dental examination, cleaning, filling, extraction, and root-canal
+treatment. Cosmetic dentistry is not covered.
+[/POLICY]
+
+[POLICY]
+policy_id = LEAVE-ANNUAL-JL1-4
+title = Annual leave entitlement for JL1-JL4
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 1
+max_job_level = 4
+content =
+Permanent BBL employees in Thailand at job levels JL1 through JL4 receive 12
+working days of paid annual leave per calendar year. Leave requires manager
+approval and must follow the company's carry-over rules.
+[/POLICY]
+
+[POLICY]
+policy_id = LEAVE-ANNUAL-JL5-7
+title = Annual leave entitlement for JL5-JL7
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 5
+max_job_level = 7
+content =
+Permanent BBL employees in Thailand at job levels JL5 through JL7 receive 15
+working days of paid annual leave per calendar year. Leave requires manager
+approval and must follow the company's carry-over rules.
+[/POLICY]
+
+[POLICY]
+policy_id = LEAVE-ANNUAL-JL8-10
+title = Annual leave entitlement for JL8-JL10
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 8
+max_job_level = 10
+content =
+Permanent BBL employees in Thailand at job levels JL8 through JL10 receive 20
+working days of paid annual leave per calendar year. Leave requires manager
+approval and must follow the company's carry-over rules.
+[/POLICY]
+
+[POLICY]
+policy_id = TRAVEL-INTL-JL5-7
+title = International business travel for JL5-JL7
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 5
+max_job_level = 7
+content =
+Permanent BBL employees in Thailand at job levels JL5 through JL7 may travel
+internationally for approved business purposes in economy class. The trip must
+be approved in advance by the employee's manager and cost center owner.
+[/POLICY]
+
+[POLICY]
+policy_id = TRAVEL-INTL-JL8-10
+title = International business travel for JL8-JL10
+countries = TH
+companies = BBL
+employee_types = PERMANENT
+min_job_level = 8
+max_job_level = 10
+content =
+Permanent BBL employees in Thailand at job levels JL8 through JL10 may travel
+internationally for approved business purposes. Business class is permitted
+for a scheduled flight longer than six hours; otherwise economy class applies.
+The trip must be approved in advance by the cost center owner.
+[/POLICY]

@@ -1,10 +1,11 @@
-# Secrets key 
+# Secrets key
 .env
 
 # Python
 .venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 
 # Generated data
@@ -13,6 +14,9 @@ data/*.db
 # LangGraph
 .langgraph/
 .langgraph_api/
+
+# Agent-local configuration
+.codex/
 
 # Frontend
 frontend/node_modules/
