@@ -1,0 +1,80 @@
+[
+  {
+    "case_id": "opd-e001-direct",
+    "employee_id": "E001",
+    "query": "How much can I claim for outpatient medical expenses?",
+    "expected_policy_ids": ["MED-OPD-JL1-4"]
+  },
+  {
+    "case_id": "opd-e002-paraphrase",
+    "employee_id": "E002",
+    "query": "What is my allowance for clinic visits?",
+    "expected_policy_ids": ["MED-OPD-JL5-7"]
+  },
+  {
+    "case_id": "opd-e003-direct",
+    "employee_id": "E003",
+    "query": "What is my yearly OPD reimbursement limit?",
+    "expected_policy_ids": ["MED-OPD-JL8-10"]
+  },
+  {
+    "case_id": "inpatient-e001",
+    "employee_id": "E001",
+    "query": "How much inpatient hospital coverage do I receive?",
+    "expected_policy_ids": ["MED-INPATIENT-JL1-4"]
+  },
+  {
+    "case_id": "inpatient-e002",
+    "employee_id": "E002",
+    "query": "What is my hospital admission benefit?",
+    "expected_policy_ids": ["MED-INPATIENT-JL5-7"]
+  },
+  {
+    "case_id": "dental-e003",
+    "employee_id": "E003",
+    "query": "Can I claim dental treatment?",
+    "expected_policy_ids": ["MED-DENTAL-ALL"]
+  },
+  {
+    "case_id": "leave-e001",
+    "employee_id": "E001",
+    "query": "How many annual leave days do I have?",
+    "expected_policy_ids": ["LEAVE-ANNUAL-JL1-4"]
+  },
+  {
+    "case_id": "leave-e002-paraphrase",
+    "employee_id": "E002",
+    "query": "How many paid vacation days am I entitled to?",
+    "expected_policy_ids": ["LEAVE-ANNUAL-JL5-7"]
+  },
+  {
+    "case_id": "leave-e003",
+    "employee_id": "E003",
+    "query": "Tell me my annual leave entitlement.",
+    "expected_policy_ids": ["LEAVE-ANNUAL-JL8-10"]
+  },
+  {
+    "case_id": "travel-e002",
+    "employee_id": "E002",
+    "query": "What is the international business travel policy?",
+    "expected_policy_ids": ["TRAVEL-INTL-JL5-7"]
+  },
+  {
+    "case_id": "travel-e003-paraphrase",
+    "employee_id": "E003",
+    "query": "May I fly business class for an overseas work trip?",
+    "expected_policy_ids": ["TRAVEL-INTL-JL8-10"]
+  },
+  {
+    "case_id": "travel-e001-ineligible",
+    "employee_id": "E001",
+    "query": "What is the international business travel policy?",
+    "expected_policy_ids": []
+  },
+  {
+    "case_id": "unsupported-parking",
+    "employee_id": "E003",
+    "query": "Where can I park my car at the office?",
+    "expected_policy_ids": []
+  }
+]
