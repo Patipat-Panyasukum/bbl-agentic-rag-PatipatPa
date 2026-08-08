@@ -7,10 +7,9 @@
 - An OpenAI API key for retrieval evaluation and the agent workflow
 - A LangSmith API key only when tracing is enabled
 
-The current dependency set imports successfully in the local Python 3.13.5
-environment. Dependencies are intentionally unchanged in the workflow slice;
-compatibility and version constraints will be reviewed when the first runtime
-APIs are implemented.
+The current dependency set, including local Chroma, imports successfully in the
+local Python 3.13.5 environment. `pip check` is part of verification because
+Chroma and the LangGraph development server both depend on OpenTelemetry.
 
 ## Windows PowerShell setup
 
@@ -35,6 +34,14 @@ When changing a rule, update the policy text only when the source policy itself
 changes. Update the sidecar when ingestion, search vocabulary, or demo employee
 eligibility changes. `KNOWLEDGE_BASE_PATH` and `POLICY_METADATA_PATH` can point
 to alternate files for testing.
+
+`CHROMA_PATH` defaults to `data/chroma`. The directory is generated, local,
+ignored by Git, and rebuildable from the two policy files. On the first search,
+the application embeds and indexes the policy clauses. Later processes reuse
+unchanged vectors; editing source text, retrieval terms, eligibility metadata,
+the embedding model, or the chunking strategy causes affected generated rows to
+be rebuilt automatically. No separate Chroma server is required.
+Anonymized Chroma product telemetry is disabled by the application.
 
 On Windows systems using a legacy console code page, the LangGraph CLI can fail
 while printing Unicode help text. Enable Python UTF-8 mode in that shell:
@@ -64,8 +71,8 @@ python scripts/evaluate_retrieval.py
 
 The command uses `text-embedding-3-small` and requires `OPENAI_API_KEY` in the
 ignored `.env`. It returns a non-zero exit code if any committed retrieval case
-fails. Model, threshold, dataset, knowledge-base, database, and Top-K values can
-be overridden through `--help` options.
+fails. Model, threshold, dataset, knowledge-base, employee database, Chroma
+path, and Top-K values can be overridden through `--help` options.
 
 ## Run the agent workflow
 
@@ -95,6 +102,19 @@ python scripts/run_smoke_queries.py
 Operations OPD limits, a Thai IPD question, the social-security-first rule, and
 an unsupported question.
 
+Run the full-workflow evaluation, starting with one low-cost canary:
+
+```powershell
+python scripts/evaluate_agents.py --limit 1
+python scripts/evaluate_agents.py
+```
+
+Regenerate the compiled graph image after changing nodes or edges:
+
+```powershell
+python scripts/export_graph_diagram.py
+```
+
 Validate and start the official LangGraph development server:
 
 ```powershell
@@ -103,7 +123,10 @@ langgraph dev
 ```
 
 When `LANGSMITH_TRACING=true` and a valid key/project are configured, LangChain
-and LangGraph calls emit traces for graph inspection.
+and LangGraph calls emit traces for graph inspection. CLI, smoke, and evaluation
+runs add source/case labels documented in
+[docs/OBSERVABILITY.md](OBSERVABILITY.md). Use only fictional or approved data;
+normal traces contain graph inputs and outputs.
 
 ## Engineering loop
 

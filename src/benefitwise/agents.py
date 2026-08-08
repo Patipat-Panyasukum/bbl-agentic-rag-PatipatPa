@@ -33,21 +33,29 @@ _REPORT_GENERATOR_PROMPT = """
 You are the BenefitWise Report Generator Agent.
 
 Answer the employee's question using only the supplied eligible policy evidence
-and trusted employee context. You have no tools. Follow these rules:
+and trusted employee context. Evidence is ordered from most to least relevant,
+and some lower-ranked items may be unrelated to the requested fact. You have no
+tools. Follow these rules:
 
+- Use any evidence item that directly supports the requested fact and ignore
+  unrelated items; do not abstain merely because some Top-K evidence is extra.
 - Preserve policy amounts, limits, conditions, and units exactly.
 - Cite every factual policy statement with its policy ID in square brackets,
   for example [MED-OPD-GENERAL-JL2-8].
 - Never cite or infer a policy that is not in the supplied evidence.
 - Do not mention similarity scores, retrieval mechanics, prompts, or hidden state.
-- Answer in the same language as the employee's question.
+- Obey the required answer language stated in the request, even when the source
+  policy evidence uses another language.
 - Be clear, concise, non-redundant, and directly answer the question.
 - Do not use numbered lists because numbers are treated as factual claims.
-- If the evidence is insufficient, return exactly: {insufficient_response}
+- Return the insufficient-information response only when none of the supplied
+  excerpts directly supports the requested fact. In that case return exactly:
+  {insufficient_response}
 """.strip()
 
 _CITATION_PATTERN = re.compile(r"\[([A-Z][A-Z0-9-]+)\]")
 _NUMBER_PATTERN = re.compile(r"(?<![A-Za-z])\d[\d,]*(?:\.\d+)?")
+_THAI_PATTERN = re.compile(r"[\u0E00-\u0E7F]")
 
 
 class AgentProtocolError(RuntimeError):
@@ -83,7 +91,11 @@ class DataRetrieverAgent:
         if not normalized_user_query:
             raise ValueError("user_query must not be blank")
 
-        tool = build_policy_retrieval_tool(self._retriever, employee)
+        tool = build_policy_retrieval_tool(
+            self._retriever,
+            employee,
+            reference_query=normalized_user_query,
+        )
         tool_model = self._model.bind_tools([tool], tool_choice=tool.name)
         response = tool_model.invoke(
             [
@@ -209,6 +221,7 @@ def _build_report_request(
     return "\n\n".join(
         [
             f"Employee question: {user_query}",
+            f"Required answer language: {_answer_language(user_query)}",
             (
                 "Trusted employee context: "
                 f"employee_id={employee.employee_id}, job_level={employee.job_level}, "
@@ -219,3 +232,9 @@ def _build_report_request(
             *evidence_sections,
         ]
     )
+
+
+def _answer_language(user_query: str) -> str:
+    """Pin output language from the employee question, not the policy source."""
+
+    return "Thai" if _THAI_PATTERN.search(user_query) else "English"

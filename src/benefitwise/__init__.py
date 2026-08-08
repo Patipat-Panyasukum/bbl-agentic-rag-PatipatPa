@@ -19,9 +19,11 @@ from benefitwise.policy import PolicyChunk, PolicyEligibility, filter_eligible_p
 from benefitwise.policy_parser import PolicyParseError, load_policy_chunks
 from benefitwise.retrieval import PolicyEvidence, PolicyRetriever
 from benefitwise.retrieval_tool import build_policy_retrieval_tool
+from benefitwise.vector_store import ChromaPolicyVectorStore
 
 __all__ = [
     "AppSettings",
+    "ChromaPolicyVectorStore",
     "DataRetrieverAgent",
     "EmployeeContext",
     "EmployeeDatabaseNotInitializedError",

@@ -32,8 +32,10 @@ behavior. Each entry records status, context, decision, and consequences.
 - **Date:** 2026-08-08
 - **Context:** Semantically similar policy text may belong to a different job
   level, country, company, or employee type.
-- **Decision:** Remove ineligible chunks first, then embed/rank the remaining
-  candidates and apply Top-K.
+- **Decision:** Resolve eligible policy IDs in application code, pass those IDs
+  into the vector query as an exact metadata candidate filter, then apply
+  cosine ranking and Top-K only within that set. The generated index may
+  precompute embeddings for all sanitized demo policies.
 - **Consequences:** Ineligible text cannot leak through similarity ranking.
   Retrieval evaluation must use the same ordering of operations.
 
@@ -51,7 +53,7 @@ behavior. Each entry records status, context, decision, and consequences.
 
 ## D005: Use sentence embeddings and cosine similarity
 
-- **Status:** Accepted
+- **Status:** Superseded by D017
 - **Date:** 2026-08-08
 - **Context:** Queries should match paraphrased policy content without requiring
   a vector database.
@@ -165,6 +167,11 @@ behavior. Each entry records status, context, decision, and consequences.
   incurs small API usage. Deterministic tests remain offline through an injected
   embedding fake.
 
+The threshold remains deliberately tied to evaluation rather than its apparent
+absolute size. The current English emergency-ambulance case scores `0.265540`,
+while unsupported annual leave tops out at `0.242074`; raising the cutoff to
+`0.27` would discard a correctly ranked positive case.
+
 ## D014: Separate policy prose from retrieval metadata
 
 - **Status:** Accepted
@@ -181,3 +188,52 @@ behavior. Each entry records status, context, decision, and consequences.
   from metadata derived by the application team. Metadata must be maintained
   when source section numbering or demo eligibility changes, and validation
   fails closed if a mapping points to a missing section.
+
+## D015: Anchor agent searches to the original question
+
+- **Status:** Accepted
+- **Date:** 2026-08-08
+- **Context:** Full-workflow evaluation found that a valid but generic word added
+  during agent query reformulation could push an unsupported annual-leave query
+  above the retrieval threshold.
+- **Decision:** When the Data Retriever reformulates a search, require candidate
+  policy evidence to clear the same similarity threshold against both the model
+  search query and the original user question. Keep the original question bound
+  inside the tool rather than exposing it as a model-controlled argument.
+- **Consequences:** The model still decides what to search for, while semantic
+  query drift fails closed. The two query embeddings share one batch request;
+  direct deterministic retrieval remains unchanged when no anchor is supplied.
+
+## D016: Prefer deterministic local agent evaluation with labeled traces
+
+- **Status:** Accepted
+- **Date:** 2026-08-08
+- **Context:** Retrieval metrics alone do not test tool-driven query changes,
+  answer citations, required facts, language, or grounded abstention. Adding an
+  LLM judge would increase cost and variance for a small assignment baseline.
+- **Decision:** Commit explicit full-workflow cases and score observable output
+  contracts deterministically. Add source and case labels through
+  `RunnableConfig` so the same runs are inspectable in LangSmith.
+- **Consequences:** Results are inexpensive to interpret and regressions map to
+  concrete contracts. Substring facts cannot judge semantic completeness, so
+  human review or a separately evaluated judge remains future production work.
+
+## D017: Persist policy vectors in local Chroma
+
+- **Status:** Accepted
+- **Date:** 2026-08-08
+- **Context:** Re-embedding every policy clause on every query wastes API calls,
+  and the retrieval boundary should make metadata filtering inspectable in the
+  vector query without adding a hosted service.
+- **Decision:** Use an ignored local Chroma persistent client configured for
+  cosine distance. Index the natural numbered policy clauses with
+  `text-embedding-3-small`, fingerprint generated records for incremental
+  synchronization, and constrain every similarity query with an eligible
+  `policy_id $in [...]` metadata filter computed from trusted employee context.
+  Keep clause-level chunk overlap at `0` because each current rule is already a
+  short, coherent 208-550-character unit.
+- **Consequences:** Policy embeddings survive process restarts and unchanged
+  clauses incur no repeat embedding cost. Chroma adds a local dependency and
+  generated `data/chroma/` state, which remains ignored and rebuildable from
+  `knowledge_base.txt` plus `policy_metadata.json`. Hosted vector
+  infrastructure remains unnecessary for this assignment-scale corpus.

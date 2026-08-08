@@ -16,6 +16,7 @@ def test_uses_reviewer_friendly_defaults(monkeypatch) -> None:
         "EMPLOYEE_DATABASE_PATH",
         "KNOWLEDGE_BASE_PATH",
         "POLICY_METADATA_PATH",
+        "CHROMA_PATH",
         "EMBEDDING_MODEL",
         "RETRIEVAL_MIN_SIMILARITY",
         "RETRIEVAL_TOP_K",
@@ -27,6 +28,7 @@ def test_uses_reviewer_friendly_defaults(monkeypatch) -> None:
     assert DEFAULT_OPENAI_MODEL == "gpt-5.6-luna"
     assert settings.openai_model == DEFAULT_OPENAI_MODEL
     assert settings.embedding_model == DEFAULT_EMBEDDING_MODEL
+    assert settings.chroma_path.as_posix() == "data/chroma"
     assert settings.use_responses_api is True
     assert settings.top_k == 3
     assert settings.min_similarity == 0.26
@@ -37,6 +39,7 @@ def test_reads_compatible_endpoint_switches(monkeypatch) -> None:
     monkeypatch.setenv("OPENAI_BASE_URL", "https://example.test/v1")
     monkeypatch.setenv("OPENAI_USE_RESPONSES_API", "false")
     monkeypatch.setenv("RETRIEVAL_TOP_K", "2")
+    monkeypatch.setenv("CHROMA_PATH", "runtime/vector-index")
 
     settings = AppSettings.from_env()
 
@@ -44,6 +47,7 @@ def test_reads_compatible_endpoint_switches(monkeypatch) -> None:
     assert settings.openai_base_url == "https://example.test/v1"
     assert settings.use_responses_api is False
     assert settings.top_k == 2
+    assert settings.chroma_path.as_posix() == "runtime/vector-index"
 
 
 @pytest.mark.parametrize(

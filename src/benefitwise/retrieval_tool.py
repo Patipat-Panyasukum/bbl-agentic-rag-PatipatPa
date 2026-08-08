@@ -19,6 +19,8 @@ class PolicyRetrievalInput(BaseModel):
 def build_policy_retrieval_tool(
     retriever: PolicyRetriever,
     employee: EmployeeContext,
+    *,
+    reference_query: str | None = None,
 ) -> BaseTool:
     """Bind trusted employee context and expose only search intent to the LLM."""
 
@@ -30,7 +32,12 @@ def build_policy_retrieval_tool(
 
         # Employee context comes from the authenticated/demo session closure.
         # It is deliberately absent from the model-visible argument schema.
-        evidence = retriever.retrieve(query, employee, top_k=top_k)
+        evidence = retriever.retrieve(
+            query,
+            employee,
+            top_k=top_k,
+            reference_query=reference_query,
+        )
         content = format_policy_evidence(evidence)
         artifact = [item.as_dict() for item in evidence]
         return content, artifact

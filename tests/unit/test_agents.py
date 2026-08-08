@@ -86,6 +86,24 @@ def test_report_generator_returns_cited_supported_answer() -> None:
     assert result.grounding_valid is True
     assert "THB 14,250" in result.answer
     assert len(model.invocations) == 1
+    assert "Required answer language: English" in model.invocations[0][-1].content
+
+
+def test_report_generator_pins_thai_language_from_question() -> None:
+    model = FakeReportModel(
+        "เบิกได้ไม่เกิน THB 14,250 ต่อปี "
+        "[MED-OPD-GENERAL-JL2-8]."
+    )
+    agent = ReportGeneratorAgent(model)
+
+    result = agent.generate(
+        "วงเงิน OPD เท่าไร",
+        _employee(),
+        _opd_evidence(),
+    )
+
+    assert result.grounding_valid is True
+    assert "Required answer language: Thai" in model.invocations[0][-1].content
 
 
 @pytest.mark.parametrize(

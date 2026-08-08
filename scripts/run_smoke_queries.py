@@ -8,6 +8,7 @@ from pathlib import Path
 
 from benefitwise.agents import INSUFFICIENT_INFORMATION_RESPONSE
 from benefitwise.application import create_default_graph
+from benefitwise.observability import build_run_config
 
 DEFAULT_CASES_PATH = Path("examples/demo_queries.json")
 
@@ -32,7 +33,12 @@ def main() -> None:
     failed = 0
     for case in cases:
         result = graph.invoke(
-            {"employee_id": case["employee_id"], "user_query": case["query"]}
+            {"employee_id": case["employee_id"], "user_query": case["query"]},
+            config=build_run_config(
+                source="smoke",
+                employee_id=case["employee_id"],
+                case_id=case["case_id"],
+            ),
         )
         retrieved_ids = [item["policy_id"] for item in result["evidence"]]
         expected_policy_id = case["expected_policy_id"]
