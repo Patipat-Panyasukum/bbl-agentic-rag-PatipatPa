@@ -38,6 +38,7 @@ export type StateType = {
   retrieval_query?: string;
   evidence?: PolicyEvidenceState[];
   final_answer?: string;
+  citation_policy_ids?: string[];
   grounding_valid?: boolean;
 };
 

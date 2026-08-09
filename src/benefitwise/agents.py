@@ -49,8 +49,16 @@ tools. Follow these rules:
   unrelated items; do not abstain merely because some Top-K evidence is extra.
 - Preserve policy amounts, limits, conditions, and units exactly.
 - Cite every factual policy statement with its policy ID in square brackets,
-  for example [MED-OPD-GENERAL-JL2-8].
+  for example [MED-OPD-GENERAL-JL2-8]. These are internal validation markers;
+  the application renders reader-friendly source labels after validation.
 - Never cite or infer a policy that is not in the supplied evidence.
+- Do not infer that a prerequisite is not required merely because an excerpt
+  does not mention it. If the available evidence gives a process but does not
+  determine the requested yes/no requirement, say that the evidence does not
+  state the requirement; do not answer yes or no.
+- Do not include an exception, condition, or benefit category unless it directly
+  answers the employee's question. Extra Top-K evidence is not a reason to add
+  a loosely related paragraph.
 - Do not mention similarity scores, retrieval mechanics, prompts, or hidden state.
 - Obey the required answer language stated in the request, even when the source
   policy evidence uses another language.
@@ -64,6 +72,7 @@ tools. Follow these rules:
 _CITATION_PATTERN = re.compile(r"\[([A-Z][A-Z0-9-]+)\]")
 _NUMBER_PATTERN = re.compile(r"(?<![A-Za-z])\d[\d,]*(?:\.\d+)?")
 _THAI_PATTERN = re.compile(r"[\u0E00-\u0E7F]")
+_SECTION_NUMBER_PATTERN = re.compile(r"^(\d+(?:\.\d+)*)\b")
 
 
 class AgentProtocolError(RuntimeError):
@@ -74,6 +83,7 @@ class AgentProtocolError(RuntimeError):
 class ReportResult:
     answer: str
     grounding_valid: bool
+    citation_policy_ids: tuple[str, ...] = ()
 
 
 class DataRetrieverAgent:
@@ -182,7 +192,12 @@ class ReportGeneratorAgent:
         if not grounding_valid:
             # Never release an answer that fails the deterministic support checks.
             return ReportResult(INSUFFICIENT_INFORMATION_RESPONSE, grounding_valid=False)
-        return ReportResult(answer, grounding_valid=True)
+        citation_policy_ids = _ordered_citation_policy_ids(answer)
+        return ReportResult(
+            _render_reader_answer(answer, evidence, _answer_language(user_query)),
+            grounding_valid=True,
+            citation_policy_ids=citation_policy_ids,
+        )
 
 
 def validate_grounded_answer(
@@ -283,34 +298,80 @@ def _append_profile_applicability(
     non_applicable_ids = [
         policy_id for policy_id in cited_ids if policy_id not in applicable_ids
     ]
-    citations = " ".join(f"[{policy_id}]" for policy_id in cited_ids)
     profile = f"{employee.employee_id} ({employee.job_level})"
 
     if _answer_language(user_query) == "Thai":
         if applicable_ids and not non_applicable_ids:
-            note = f"สำหรับโปรไฟล์ปัจจุบัน {profile}: หลักฐานที่อ้างอิงใช้กับโปรไฟล์นี้"
+            note = f"> สิทธิของคุณ: หลักเกณฑ์ข้างต้นใช้กับ {profile}"
         elif non_applicable_ids and not applicable_ids:
             note = (
-                f"สำหรับโปรไฟล์ปัจจุบัน {profile}: หลักฐานที่อ้างอิงไม่ใช้กับโปรไฟล์นี้"
+                f"> หมายเหตุสำหรับ {profile}: "
+                "หลักเกณฑ์ข้างต้นไม่อยู่ในสิทธิของคุณ"
             )
         else:
             note = (
-                f"สำหรับโปรไฟล์ปัจจุบัน {profile}: หลักฐานที่อ้างอิงมีทั้งส่วนที่ใช้ "
-                "และไม่ใช้กับโปรไฟล์นี้"
+                f"> หมายเหตุสำหรับ {profile}: "
+                "หลักเกณฑ์ข้างต้นมีทั้งส่วนที่ใช้และไม่ใช้กับสิทธิของคุณ"
             )
     elif applicable_ids and not non_applicable_ids:
-        note = f"For the current profile {profile}, the cited policy evidence applies."
+        note = f"> Your eligibility: the policy above applies to {profile}."
     elif non_applicable_ids and not applicable_ids:
         note = (
-            f"For the current profile {profile}, the cited policy evidence does not apply."
+            f"> Note for {profile}: "
+            "the policy above does not apply to your profile."
         )
     else:
-        note = (
-            f"For the current profile {profile}, the cited policy evidence has mixed "
-            "applicability."
-        )
+        note = f"> Note for {profile}: the policy above has mixed applicability."
 
-    return f"{policy_answer}\n\n{note} {citations}"
+    return f"{policy_answer}\n\n{note}"
+
+
+def _ordered_citation_policy_ids(answer: str) -> tuple[str, ...]:
+    """Return cited policy IDs in answer order for structured evaluation output."""
+
+    return tuple(dict.fromkeys(_CITATION_PATTERN.findall(answer)))
+
+
+def _render_reader_answer(
+    validated_answer: str,
+    evidence: list[dict[str, object]],
+    language: str,
+) -> str:
+    """Replace internal IDs with a concise, reader-facing source list."""
+
+    evidence_by_id = {
+        str(item["policy_id"]): item
+        for item in evidence
+        if isinstance(item.get("policy_id"), str)
+    }
+    cited_ids = _ordered_citation_policy_ids(validated_answer)
+    answer_without_ids = _CITATION_PATTERN.sub("", validated_answer)
+    answer_without_ids = re.sub(r"[ \t]+([,.;:!?])", r"\1", answer_without_ids)
+    answer_without_ids = re.sub(r" {2,}", " ", answer_without_ids).rstrip()
+    source_labels = [
+        _source_label(evidence_by_id[policy_id], language)
+        for policy_id in cited_ids
+        if policy_id in evidence_by_id
+    ]
+    if not source_labels:
+        return answer_without_ids
+
+    heading = "**แหล่งอ้างอิง**" if language == "Thai" else "**Sources**"
+    source_list = "\n".join(f"- {label}" for label in source_labels)
+    return f"{answer_without_ids}\n\n{heading}\n{source_list}"
+
+
+def _source_label(evidence: dict[str, object], language: str) -> str:
+    """Format a source from trusted evidence without exposing internal policy IDs."""
+
+    title = str(evidence.get("title", "")).strip()
+    if language == "Thai" and title:
+        return title
+
+    match = _SECTION_NUMBER_PATTERN.match(title)
+    if match is not None:
+        return f"Policy section {match.group(1)}"
+    return "Retrieved policy excerpt"
 
 
 def _answer_language(user_query: str) -> str:

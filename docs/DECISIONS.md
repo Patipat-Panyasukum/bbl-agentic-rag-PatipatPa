@@ -128,7 +128,9 @@ behavior. Each entry records status, context, decision, and consequences.
   claims remain supported.
 - **Decision:** Skip the Report Generator when evidence is empty. For generated
   answers, require known policy citations and reject numeric claims absent from
-  trusted employee context/evidence.
+  trusted employee context/evidence. Preserve validated citation IDs in
+  structured graph output, but render policy-section labels rather than internal
+  IDs in the employee-facing answer.
 - **Consequences:** Unsupported output becomes an insufficient-information
   response. The lightweight validator is intentionally conservative and does
   not replace broader semantic groundedness evaluation.
@@ -197,12 +199,14 @@ while unsupported annual leave tops out at `0.242074`; raising the cutoff to
   during agent query reformulation could push an unsupported annual-leave query
   above the retrieval threshold.
 - **Decision:** When the Data Retriever reformulates a search, require candidate
-  policy evidence to clear the same similarity threshold against both the model
-  search query and the original user question. Keep the original question bound
-  inside the tool rather than exposing it as a model-controlled argument.
+  policy evidence to clear the similarity threshold against the original user
+  question. Rank admitted candidates with the better of the model-query and
+  original-query scores. Keep the original question bound inside the tool rather
+  than exposing it as a model-controlled argument.
 - **Consequences:** The model still decides what to search for, while semantic
-  query drift fails closed. The two query embeddings share one batch request;
-  direct deterministic retrieval remains unchanged when no anchor is supplied.
+  query drift fails closed. Harmless reformulation variance cannot suppress a
+  policy already supported by the original question. The two query embeddings
+  share one batch request; direct retrieval is unchanged without an anchor.
 
 ## D016: Prefer deterministic local agent evaluation with labeled traces
 
@@ -237,3 +241,66 @@ while unsupported annual leave tops out at `0.242074`; raising the cutoff to
   generated `data/chroma/` state, which remains ignored and rebuildable from
   `knowledge_base.txt` plus `policy_metadata.json`. Hosted vector
   infrastructure remains unnecessary for this assignment-scale corpus.
+
+## D018: Customize Agent Chat UI around a fictional trusted session
+
+- **Status:** Accepted
+- **Date:** 2026-08-09
+- **Context:** The assignment requires inspectable agent orchestration and final
+  output screenshots. A generic chat client hides employee eligibility context,
+  while building an unrelated chat transport would duplicate LangGraph's stream
+  and tool-call behavior.
+- **Decision:** Use LangChain's open-source Agent Chat UI as the frontend base
+  and retain its standard single-column conversation and real tool-call/result
+  rendering. Add only a fictional E001/E002/E003 sign-in and a compact employee
+  avatar with a hover/click profile card. Group observable employee-context,
+  Retriever, tool-result, and Report Generator events into one collapsible
+  activity log without exposing private reasoning. Extend the existing graph
+  with an optional `messages` contract so the CLI and UI share the same four
+  nodes. Keep profile selection in local browser state, resolve authoritative
+  context from SQLite on every run, and accept no API secrets in the browser.
+- **Consequences:** Reviewers can trace the Retriever tool output into the
+  Report Generator in both Studio and the UI. The sign-in is explicitly a demo
+  session rather than security; production SSO, authorization, and server-side
+  sessions remain out of scope. Frontend dependencies, Node verification, and
+  browser smoke checks are now part of the submission surface.
+
+## D019: Answer explicit policy audiences before current-profile applicability
+
+- **Status:** Accepted
+- **Date:** 2026-08-09
+- **Context:** Filtering every question exclusively by the selected employee
+  profile made a question such as “what does JL8 receive?” appear unanswered
+  or let an LLM phrase the policy answer as if typed JL8 were the current
+  employee identity. A policy question and a personal-entitlement question are
+  related but not identical.
+- **Decision:** Keep the eligibility-first retrieval lane for normal personal
+  questions. When the original question explicitly names a JL audience, select
+  policy source clauses whose metadata range covers that level and rank them by
+  the original question, not a model reformulation. Attach a deterministic
+  `applies_to_current_employee` flag to every result. The Report Generator
+  answers the policy question from cited evidence; the application appends a
+  separate concise applicability note for the selected profile and renders
+  reader-facing source labels from validated citation IDs.
+- **Consequences:** Policy facts remain answerable even when the current profile
+  differs from the policy audience, while no typed text can override trusted
+  identity. The evidence contract and tool display now expose applicability.
+  Evaluation must cover both personal eligibility-first retrieval and explicit
+  policy-scope behavior.
+
+## D020: Show saved LangGraph threads as profile-scoped chat history
+
+- **Status:** Accepted
+- **Date:** 2026-08-09
+- **Context:** Reviewers need to revisit actual tool/evidence conversations
+  without the UI inventing a separate browser-only conversation log.
+- **Decision:** Search the existing local LangGraph thread store from the
+  frontend, derive only the latest user question, final answer, status, and
+  update time for display, and filter each list to the selected fictional
+  employee ID preserved in graph state. Use the original thread ID to reopen a
+  conversation. Use the supplied BenefitWise mark and generated fictional
+  avatars only as presentation assets.
+- **Consequences:** History remains an inspectable view of actual graph data and
+  avoids exposing private reasoning. This is local-demo persistence only;
+  production retention, authorization, real employee imagery, and audit-log
+  requirements remain deliberately out of scope.

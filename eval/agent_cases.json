@@ -1,11 +1,29 @@
 [
   {
+    "case_id": "policy-scope-general-jl8-th",
+    "employee_id": "E001",
+    "query": "นโยบายสำหรับพนักงานระดับ JL8 เบิกค่ารักษาพยาบาลผู้ป่วยนอกได้เท่าไร",
+    "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"],
+    "required_answer_terms": ["14,250", "E001", "JL3"],
+    "expected_language": "th",
+    "should_abstain": false
+  },
+  {
     "case_id": "opd-general-e001-en",
     "employee_id": "E001",
     "query": "How much can I claim for outpatient medical expenses?",
     "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"],
     "required_answer_terms": ["14,250"],
     "expected_language": "en",
+    "should_abstain": false
+  },
+  {
+    "case_id": "opd-general-natural-th",
+    "employee_id": "E001",
+    "query": "ค่ารักษาพยาบาลผู้ป่วยนอกเบิกได้เท่าไร",
+    "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"],
+    "required_answer_terms": ["14,250"],
+    "expected_language": "th",
     "should_abstain": false
   },
   {

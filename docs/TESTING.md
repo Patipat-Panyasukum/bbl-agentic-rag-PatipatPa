@@ -34,6 +34,11 @@ Using fixed employees and expected policy IDs, verify that:
   JL2-JL8 General policy while E003 receives the Operations JL1 policy
 - deterministic eligibility becomes Chroma's exact candidate-ID metadata filter
 - a semantically stronger but ineligible vector cannot enter the ranked results
+- an explicitly named job-level policy question selects source clauses whose
+  policy range covers that level and marks whether each cited clause applies to
+  the current profile
+- the original wording, rather than an LLM reformulation, ranks an explicit
+  policy-scope question so the agent cannot change its subject
 - unsupported questions return no usable evidence
 
 Embedding-dependent tests should control the embedding model or mark slow/model
@@ -47,6 +52,10 @@ Verify with controlled models and tool spies that:
 - trusted employee context cannot be replaced by model-generated tool input
 - the retriever returns raw evidence into graph state
 - the Report Generator receives the question and retrieved evidence
+- the Report Generator answers the policy question before a deterministic
+  current-profile applicability note is appended; internal policy citations are
+  exposed through structured output while the final answer renders readable
+  source labels
 - the Report Generator has no tools and does not add unsupported policy facts
 - empty evidence produces the agreed insufficient-information response
 
@@ -78,12 +87,37 @@ Maintain representative end-to-end examples for:
 The unsupported case passes only when the answer explicitly says that the
 available policy evidence is insufficient and contains no invented entitlement.
 
+### Demo UI tests
+
+The frontend verification is split by cost:
+
+- `npm run lint`, `npm run typecheck`, and `npm run build` validate source and
+  production compilation without model calls.
+- `npm run ui:smoke` renders desktop/mobile layouts, signs into a fictional
+  profile, verifies the local graph connection, opens the profile-scoped Chat
+  history route, exercises profile switching, checks console errors, and
+  captures login/empty-state screenshots.
+- `LIVE_UI_SMOKE=1` sends the natural Thai E001 OPD question through the Agent
+  Chat UI, asserts the grounded `14,250`-baht answer and expected OPD policy,
+  verifies all four observable activity steps, exercises nested evidence and
+  activity collapse plus the tool visibility control, verifies expanded
+  evidence remains inside the scrollable message pane instead of overlapping
+  the composer, then verifies a JL8 policy-scope answer includes both the OPD
+  policy and deterministic E001/JL3 applicability. It then opens a real saved
+  thread from Chat history and confirms the grounded answer renders again.
+- `CAPTURE_ALL_DEMO=1` adds personalized E003 OPD, E002 IPD, and unsupported
+  parking scenarios for reviewer screenshots.
+
+Browser checks must assert that the stream has finished before capturing the
+answer. Seeing the first streamed token is not a completed run.
+
 ### Agent workflow evaluation
 
 The committed `eval/agent_cases.json` dataset evaluates the API-backed graph as
-a black box. It scores evidence selection, required citations, explicit answer
-facts, answer language, the graph grounding flag, and exact abstention behavior.
-Provider errors are recorded per case so one failure does not hide later cases.
+a black box. It scores evidence selection, structured required citations,
+explicit answer facts, answer language, the graph grounding flag, and exact
+abstention behavior. Provider errors are recorded per case so one failure does
+not hide later cases.
 
 Run a low-cost canary before the complete set:
 
@@ -106,9 +140,11 @@ policy IDs. Report at least:
 - **MRR:** mean reciprocal rank of the first relevant policy; a miss contributes
   zero.
 
-Evaluation must run after eligibility filtering so an ineligible match never
-counts as relevant. Keep the dataset small, readable, and committed so reviewers
-can reproduce the score.
+The personal-retrieval evaluation runs after eligibility filtering, so an
+ineligible match never counts as a personal result. Policy-scope behavior is
+evaluated in the full agent workflow because it deliberately returns source
+policy information plus a separate applicability flag. Keep both datasets
+small, readable, and committed so reviewers can reproduce the score.
 
 ## Reporting results
 
@@ -130,14 +166,15 @@ metadata candidate boundary, cosine-distance conversion, persistent-record
 reuse, stale-row cleanup, chunk metadata, Top-K, irrelevant queries, tool-schema
 identity protection, tool artifacts, dataset validation, and metric calculation.
 
-The OpenAI embedding evaluation uses 15 committed English/Thai cases and
+The OpenAI embedding evaluation uses 16 committed English/Thai cases and
 currently records Hit@1 `1.000`, Hit@3 `1.000`, MRR `1.000`, and no-evidence
 accuracy `1.000`. See [the evaluation report](../eval/RESULTS.md) for
 configuration and limitations.
 
 Agent and graph coverage verifies forced retrieval-tool use, model-visible tool
 arguments, no direct Retriever answer, evidence delivery to the Report
-Generator, unknown citations/numeric hallucination rejection, no-evidence
+Generator, policy-first answer ordering with deterministic personal
+applicability, unknown citations/numeric hallucination rejection, no-evidence
 abstention without an LLM call, state propagation, node presence, unknown
 employee short-circuiting, and personalized E001/E002/E003 graph results.
 
@@ -145,7 +182,16 @@ API-backed smoke verification is deliberately separate from pytest. It checks
 provider compatibility and real prompt/tool behavior while keeping normal tests
 fast, deterministic, and free of API cost.
 
-The full-workflow dataset currently contains 10 English/Thai cases. Its executed
-baseline is `1.000` for evidence, citation, required-fact, language, grounding,
-abstention, and overall accuracy. This is a small curated baseline rather than a
-claim of production quality.
+The UI additionally verifies the Agent Chat `messages` input contract. The
+graph must return the real Retriever `AIMessage` tool call, matching
+`ToolMessage`, final answer message, employee context, and evidence state; the
+UI must not synthesize fake tool activity.
+
+The UI renders only actual graph messages and observable tool data. It must not
+request, persist, synthesize, or display private model reasoning.
+
+The full-workflow dataset currently contains 12 English/Thai cases, including
+an explicit JL8 policy-scope question with a separate E001/JL3 applicability
+note. Its executed baseline is `1.000` for evidence, citation, required-fact,
+language, grounding, abstention, and overall accuracy. This is a small curated
+baseline rather than a claim of production quality.

@@ -26,6 +26,7 @@ class BenefitWiseOutput(TypedDict, total=False):
     retrieval_query: str
     evidence: list[dict[str, object]]
     final_answer: str
+    citation_policy_ids: list[str]
     grounding_valid: bool
     messages: list[BaseMessage]
 
@@ -40,6 +41,7 @@ class BenefitWiseState(TypedDict, total=False):
     retrieval_tool_content: str
     evidence: list[dict[str, object]]
     final_answer: str
+    citation_policy_ids: list[str]
     grounding_valid: bool
 
 
@@ -128,6 +130,7 @@ def build_benefit_graph(
         )
         update: dict[str, object] = {
             "final_answer": report.answer,
+            "citation_policy_ids": list(report.citation_policy_ids),
             "grounding_valid": report.grounding_valid,
         }
         if state.get("messages"):

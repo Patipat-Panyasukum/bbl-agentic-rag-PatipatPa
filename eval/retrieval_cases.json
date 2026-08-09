@@ -12,6 +12,12 @@
     "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"]
   },
   {
+    "case_id": "opd-general-natural-th",
+    "employee_id": "E001",
+    "query": "ค่ารักษาพยาบาลผู้ป่วยนอกเบิกได้เท่าไร",
+    "expected_policy_ids": ["MED-OPD-GENERAL-JL2-8"]
+  },
+  {
     "case_id": "opd-operations-e003-en",
     "employee_id": "E003",
     "query": "What is my OPD allowance per clinic visit?",
