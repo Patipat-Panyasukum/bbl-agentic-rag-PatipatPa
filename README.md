@@ -1,195 +1,322 @@
 # BenefitWise AI
 
-BenefitWise AI is a personalized employee benefits assistant for the BBL
-Innovation Data and AI Fest 2026 AI Engineer programming test. The system uses
-two sequential LangGraph agents: one retrieves policy evidence from a local
-knowledge base, and the other turns only that evidence into a clear policy
-answer followed by deterministic current-profile applicability.
+BenefitWise AI is a reviewer-ready, end-to-end policy chatbot that retrieves
+sanitized benefit-policy evidence and produces a grounded answer for a selected
+fictional employee profile.
 
-> **Current status:** core RAG, both agents, the sequential LangGraph, grounded
-> answer generation, CLI, retrieval/agent evaluation, labeled LangSmith traces,
-> and the reviewer-facing demo UI are implemented. Final presentation cleanup
-> remains future work.
+> **Demo scope:** employee profiles are fictional and the policy source is a
+> sanitized demonstration dataset, not an official policy or employee system.
 
-## Implemented workflow
+Built with **LangGraph**, a **LangChain custom tool**, OpenAI
+`text-embedding-3-small`, local **Chroma**, and **SQLite**.
+
+## Assignment Requirements -> Implementation
+
+| Assignment requirement                          | Implemented evidence                                                                                                          |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Two distinct agents                             | A Data Retriever Agent is forced to retrieve evidence; a separate, tool-free Report Generator synthesizes it.                 |
+| Custom retrieval tool over `knowledge_base.txt` | `retrieve_benefit_policies` reads policy chunks derived from the committed text source and returns raw `PolicyEvidence`.      |
+| Sequential orchestration                        | One compiled LangGraph executes employee resolution -> Retriever -> retrieval tool -> Generator.                              |
+| Grounded, non-redundant final answer            | The Generator receives evidence only; deterministic citation and numeric validation fail closed when support is missing.      |
+| Runnable code and screenshots                   | The repository includes the Python runtime, source data, tests/evaluations, local-demo UI, and captured workflow screenshots. |
+
+## End-to-End Experience
+
+1. Select one of the clearly labelled fictional employee profiles.
+2. Ask a benefit-policy question in English or Thai.
+3. The Data Retriever Agent calls the custom retrieval tool, which filters
+   policy candidates deterministically and returns the most relevant evidence.
+4. The Report Generator produces a concise answer with reader-friendly policy
+   source labels and a deterministic note about the selected profile's
+   applicability.
+
+![BenefitWise fictional-profile login](docs/assets/demo-login.png)
+
+### Current chat examples
+
+The following captured answers use fictional E001 context and the current
+reader-facing source labels; policy IDs remain inside the observable tool result
+and evaluation state, not in the employee-facing answer.
+
+**Personalized OPD answer**
+
+![Current Thai OPD answer for fictional E001](docs/assets/Demo1.png)
+
+**Policy-first answer for an explicitly named Operations JL1 audience**
+
+![Current Operations JL1 policy answer with E001 applicability](docs/assets/demo2.png)
+
+**Cautious, evidence-bounded answer for a social-security follow-up**
+
+![Current evidence-bounded social-security answer](docs/assets/demo3.png)
+
+### Responsive mobile view
+
+The same current UI supports fictional profile selection and grounded answers
+at a mobile viewport.
+
+| Mobile profile selection                                                         | Mobile grounded OPD answer                                                      |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| ![Current mobile fictional-profile selection](docs/assets/demo-login-mobile.png) | ![Current mobile Thai OPD answer](docs/assets/demo-chat-opd-th-e001-mobile.png) |
+
+The expandable evidence view is also usable on mobile; it exposes tool output
+and retrieved policy excerpts, not private model reasoning.
+
+![Current mobile expanded retrieval evidence](docs/assets/demo-chat-evidence-expanded-mobile.png)
+
+The visible **Agent activity** panel shows observable graph state and tool
+events: employee context resolved, tool call, tool result, and answer complete.
+It is deliberately not a display of private model chain-of-thought.
+
+## Architecture at a Glance
+
+The central guarantee is simple: **employee identity and personal eligibility
+are resolved deterministically outside the LLM.** The model can formulate a
+search query, but cannot select an employee, alter a profile, or decide
+eligibility.
 
 ```mermaid
 flowchart LR
-    U[User query + demo employee] --> C[Deterministic employee context]
-    C --> A[Data Retriever Agent]
-    A --> T[Custom retrieval tool]
-    T --> Q{Explicit JL policy audience?}
-    Q -->|No: personal question| F[Eligibility filter]
-    Q -->|Yes: policy question| P[Policy-range filter]
-    F -->|eligible policy IDs| V[(Local Chroma index)]
-    P -->|matching policy IDs| V
-    V --> S[Cosine ranking + Top-K evidence]
-    S --> R[Report Generator Agent]
-    R --> O[Grounded final answer]
+    UI[Demo UI or CLI] -->|employee ID + question| EC[resolve_employee]
+
+    subgraph T[Trusted data plane]
+        DB[(SQLite fictional employees)] --> EC
+        KB[knowledge_base.txt\nsanitized policy prose] --> ING[Validated policy ingestion]
+        META[policy_metadata.json\nderived eligibility metadata] --> ING
+    end
+
+    subgraph R[Retrieval plane]
+        FILTER[Deterministic eligibility or\nexplicit-policy-range filter]
+        CHROMA[(Local Chroma\ncosine collection)]
+        EMB[OpenAI embeddings\ntext-embedding-3-small]
+        EVIDENCE[Top-3 raw PolicyEvidence]
+        ING --> CHROMA
+        FILTER -->|admitted policy IDs| CHROMA
+        EMB --> CHROMA
+        CHROMA --> EVIDENCE
+    end
+
+    subgraph A[Agent plane: compiled LangGraph]
+        DR[data_retriever_agent]
+        TOOL[retrieval_tool\nretrieve_benefit_policies]
+        RG[report_generator_agent\nno tools]
+        DR --> TOOL --> RG
+    end
+
+    EC -->|trusted employee context + question| DR
+    EC -->|trusted profile metadata| FILTER
+    TOOL -->|tool query| FILTER
+    EVIDENCE -->|raw evidence only| RG
+    RG --> OUT[Grounded final answer]
 ```
 
-The image below is generated from the compiled application graph rather than
-maintained as a separate hand-drawn workflow.
+`knowledge_base.txt` and `policy_metadata.json` are authoritative. Local
+Chroma is generated and rebuildable; it ranks only policy IDs already admitted
+by deterministic filtering and never decides eligibility.
 
-![Compiled BenefitWise LangGraph](docs/assets/langgraph-workflow.png)
+## How Retrieval Is Grounded
 
-The employee identity and personal eligibility rules are deterministic. The
-language model may formulate what to search for, but it may not choose or alter
-the employee profile. A question that explicitly names a level such as `JL8`
-retrieves the relevant policy range first; the system then states whether that
-policy applies to the selected profile.
+The policy file is parsed into natural numbered-policy clauses rather than
+arbitrary token windows. The current clauses preserve complete rules, so the
+measured chunk-overlap setting is `0` rather than duplicating adjacent evidence.
 
-## Demo UI
+For each question, the runtime:
 
-The frontend keeps the standard open-source Agent Chat UI conversation layout
-and real LangGraph tool-call/result rendering. It adds a fictional profile
-sign-in, a compact employee avatar whose profile card opens on hover or click,
-a green-and-white presentation using the supplied BenefitWise mark, and a
-collapsible four-step activity log built only from observable graph state and
-messages. Its Chat history page reads saved LangGraph threads, scopes them to
-the selected fictional profile, and opens the original conversation. The
-browser never accepts an OpenAI or LangSmith secret. This is a local
-programming-test demo, not production authentication or an official employee
-portal.
+1. validates the policy text against the metadata sidecar;
+2. selects policy IDs using trusted employee eligibility for a personal
+   question, or the requested policy-level range when a question explicitly
+   names a JL audience;
+3. passes only those IDs into Chroma's metadata filter;
+4. embeds the query using OpenAI `text-embedding-3-small` and ranks the
+   allowed vectors by cosine similarity;
+5. requires the original user question to clear the measured `0.26` relevance
+   threshold, then returns at most Top-3 evidence objects; and
+6. returns each object with its policy ID, title, raw excerpt, similarity score,
+   eligibility data, and deterministic applicability flag.
 
-![BenefitWise demo login](docs/assets/demo-login.png)
+```mermaid
+flowchart LR
+    Q[Question + trusted employee context] --> F[Deterministic policy-ID filter]
+    F -->|metadata $in| V[Chroma cosine ranking]
+    V --> A[Original-question relevance anchor\nminimum similarity 0.26]
+    A --> K[Top-3 raw evidence]
+```
 
-![Employee profile popover](docs/assets/demo-chat-profile-e001.png)
+For an explicitly named policy audience such as `JL8`, that level selects the
+policy source range only. It never replaces the trusted identity of the
+currently selected fictional employee; the final applicability note is computed
+separately.
 
-![Saved E001 conversations](docs/assets/demo-chat-history-e001.png)
+## LangGraph Orchestration: Nodes, Edges, and State
 
-![Grounded Thai E001 OPD answer](docs/assets/demo-chat-opd-th-e001.png)
+The exact compiled topology is:
 
-![JL8 policy answer followed by E001 applicability](docs/assets/demo-chat-policy-jl8-e001.png)
+```text
+START
+  -> resolve_employee
+  -> data_retriever_agent
+  -> retrieval_tool
+  -> report_generator_agent
+  -> END
+```
 
-Start the graph and Studio in one terminal, then the Next.js UI in another:
+The current compiled graph is shown below in LangGraph Studio. It is the same
+four-node topology the application invokes, rather than a hand-drawn diagram.
+
+![Current BenefitWise LangGraph topology in LangGraph Studio](<docs/assets/graph from langgraph studio.png>)
+
+| Node                     | Receives                                        | Produces                          | Boundary                                       |
+| ------------------------ | ----------------------------------------------- | --------------------------------- | ---------------------------------------------- |
+| `resolve_employee`       | Employee ID and question                        | Trusted `employee_context`        | SQLite lookup; no LLM call.                    |
+| `data_retriever_agent`   | Question and trusted context                    | Exactly one retrieval tool call   | Returns no end-user answer.                    |
+| `retrieval_tool`         | Search query plus closure-bound trusted context | Ordered raw evidence              | Determines eligible candidates before ranking. |
+| `report_generator_agent` | Question, trusted context, and evidence         | Final answer and grounding status | Has no tools.                                  |
+
+| Reviewer-relevant graph state | Purpose                                                                |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| `employee_id`                 | Selects the fictional profile for deterministic resolution.            |
+| `user_query` / `messages`     | Carries the current CLI/evaluation question or Agent Chat interaction. |
+| `employee_context`            | Immutable SQLite-derived profile used by retrieval.                    |
+| `retrieval_query`             | Search wording emitted for the bounded tool call.                      |
+| `evidence`                    | Ordered, raw policy evidence returned by the retrieval tool.           |
+| `citation_policy_ids`         | Machine-readable policy IDs retained for evaluation and grounding.     |
+| `final_answer`                | Grounded response with human-readable source labels.                   |
+| `grounding_valid`             | Deterministic release check after citation and numeric validation.     |
+
+The Retriever's tool output crosses the next edge as structured evidence. The
+Generator receives no retrieval capability, no employee-selection capability,
+and no tool access.
+
+## Tool Call -> Evidence -> Final Answer
+
+The Retriever is configured to make exactly one call to
+`retrieve_benefit_policies`. Its result is evidence, not a response to the
+employee. The output shows the policy ID, title, raw policy excerpt, similarity,
+and deterministic applicability information passed to the next node.
+
+![Expanded retrieval-tool activity and evidence](docs/assets/demo-chat-evidence-expanded.png)
+
+The Report Generator uses only returned policy IDs as internal validation
+markers. Before release, the application verifies those citations and numerical
+claims against the evidence, preserves the IDs in structured graph output, and
+renders readable policy-section labels in the employee-facing answer. If there
+is no relevant evidence, or validation fails, it returns an explicit grounded
+insufficient-information response rather than filling a gap with general
+knowledge.
+
+## Observability: Real LangSmith Trace
+
+LangSmith tracing is available when a reviewer configures their own
+`LANGSMITH_API_KEY`. The sanitized captured graph run has this hierarchy:
+
+```text
+benefitwise_two_agent_workflow
+  resolve_employee
+  data_retriever_agent
+    ChatOpenAI
+  retrieval_tool
+    retrieve_benefit_policies
+  report_generator_agent
+    ChatOpenAI
+```
+
+The run tree below was captured from an authenticated project, then cropped to
+the hierarchy only. It excludes prompts, query text, raw policy content, keys,
+account details, and identifiers beyond the fictional demo IDs.
+
+![Sanitized LangSmith run tree](docs/assets/langsmith-run-tree.png)
+
+The complete trace contract and local inspection steps are in
+[Observability](docs/OBSERVABILITY.md).
+
+## Evaluation Results
+
+Executed on 2026-08-09 with Python 3.13.5, the committed small curated datasets
+produced the following results. These are implementation checks, not claims of
+production-quality accuracy.
+
+| Retrieval evaluation (16 cases: 14 positive, 2 no-evidence) | Result |
+| ----------------------------------------------------------- | -----: |
+| Hit@1                                                       |  1.000 |
+| Hit@3                                                       |  1.000 |
+| MRR                                                         |  1.000 |
+| No-evidence accuracy                                        |  1.000 |
+
+| Workflow evaluation (12 committed cases) | Result |
+| ---------------------------------------- | -----: |
+| Evidence accuracy                        |  1.000 |
+| Citation accuracy                        |  1.000 |
+| Grounding pass rate                      |  1.000 |
+| Abstention accuracy                      |  1.000 |
+| Overall pass rate                        |  1.000 |
+
+The retrieval evaluation uses the real embedding API; the workflow evaluation
+uses the configured `gpt-5.6-luna` model with low reasoning effort. Review the
+executed [retrieval report](eval/RESULTS.md) and [workflow report](eval/AGENT_RESULTS.md)
+for case scope, calibration, and known limitations.
+
+## Run It Locally
+
+The following Windows-first path starts the complete local demo. Detailed setup
+and verification guidance remains in [Development](docs/DEVELOPMENT.md) and
+[Testing](docs/TESTING.md).
+
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -e . --no-deps
+Copy-Item .env.example .env
+# Set OPENAI_API_KEY in the ignored .env file.
+python scripts/seed_employees.py
+```
+
+In terminal A, start the graph API and LangGraph Studio:
 
 ```powershell
 $env:PYTHONUTF8 = "1"
-.\.venv\Scripts\langgraph.exe dev
+langgraph dev
+```
 
+In terminal B, start the reviewer UI:
+
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. `langgraph dev` also opens LangSmith Studio,
-where the same four runtime nodes visible in the compiled diagram can be
-inspected. The local graph API remains at `http://127.0.0.1:2024`.
-
-## Implemented core RAG
-
-- Immutable employee context with employee ID, job level, country, company,
-  and employee type.
-- Idempotent SQLite initialization for E001/JL3 General, E002/JL6 General,
-  and E003/JL1 Operations demo profiles.
-- Normalized deterministic lookup with explicit unknown-employee and
-  uninitialized-database errors.
-- Reviewer-readable `knowledge_base.txt` containing only sanitized policy prose.
-  Personal names, signatures, organization branding, extraction artifacts, and
-  masked text are excluded.
-- Separate `policy_metadata.json` containing the section-to-policy mapping,
-  bilingual retrieval terms, and deterministic eligibility rules authored for
-  this demo.
-- Strict source/sidecar validation. Personal questions filter by employee
-  metadata before vector ranking; explicitly named policy audiences filter by
-  the policy's own level range and receive a separate applicability tag.
-  Retrieval hints improve matching but never enter evidence.
-- Original-question anchoring prevents an agent reformulation from broadening an
-  unsupported topic into apparently relevant policy evidence.
-- Persistent local Chroma vector index with OpenAI `text-embedding-3-small`
-  embeddings, deterministic candidate filters, cosine similarity, a measured
-  relevance threshold, and Top-K. Generated index data stays untracked.
-- Natural numbered policy clauses are the retrieval chunks. Their boundaries
-  already preserve complete rules, so fixed token overlap is intentionally
-  `0`; retrieval metadata records that strategy explicitly.
-- Employee-bound LangChain retrieval tool that exposes no employee ID argument
-  to the model.
-- Deterministic unit/retrieval tests plus a real embedding evaluation.
-- Data Retriever Agent forced to call the custom retrieval tool exactly once.
-- Tool-free Report Generator Agent with citation and numeric-grounding checks;
-  a deterministic post-processing note states current-profile applicability.
-- Explicit four-node LangGraph state flow and API-backed CLI demo.
-- A committed deterministic agent-output evaluation and inherited LangSmith
-  source/case labels for trace inspection.
-
-After completing the environment setup in the development guide, create the
-ignored local demo database with:
+Open `http://localhost:3000`. To use the CLI or rerun the committed checks:
 
 ```powershell
-python scripts/seed_employees.py
-```
-
-Run the committed 16-case personal-retrieval evaluation (requires
-`OPENAI_API_KEY`):
-
-```powershell
+python scripts/run_cli.py --employee-id E001 --query "What is my OPD limit?" --show-evidence
 python scripts/evaluate_retrieval.py
-```
-
-Current results with `text-embedding-3-small`, Top-3, and a `0.26` threshold are
-Hit@1 `1.000`, Hit@3 `1.000`, MRR `1.000`, and no-evidence accuracy `1.000`.
-See [the evaluation report](eval/RESULTS.md) for scope and limitations.
-
-Run the API-backed full-workflow evaluation:
-
-```powershell
-python scripts/evaluate_agents.py --limit 1
 python scripts/evaluate_agents.py
 ```
 
-The executed 12-case Luna baseline scored `1.000` for evidence, citations,
-required facts, language, grounding, abstention, and overall accuracy. It
-includes an explicit JL8 policy-scope case and the deterministic E001/JL3
-applicability note. See
-[the agent evaluation report](eval/AGENT_RESULTS.md); the result describes a
-small curated dataset, not production accuracy.
+## Boundaries and Limitations
 
-Run one complete two-agent query:
+- The profile selector is fictional demo authentication, not production SSO.
+- The policy source is sanitized demo content, not an official employee policy.
+- The local Chroma index is generated/rebuildable; source text and metadata are
+  the authoritative inputs.
+- The project makes no production claims for authentication, authorization,
+  retention, observability governance, deployment, or policy maintenance.
+- Perfect scores are limited to small curated evaluation datasets and do not
+  replace broader evaluation or human policy review.
 
-```powershell
-python scripts/run_cli.py `
-  --employee-id E002 `
-  --query "How much can I claim for outpatient medical expenses?" `
-  --show-evidence
-```
+## Repository Guide
 
-Run the committed smoke scenarios, optionally limiting API usage during
-development:
+| Location                                       | Contents                                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| [`src/`](src/)                                 | Python package: employee context, policy parsing, retrieval, agents, and graph. |
+| [`knowledge_base.txt`](knowledge_base.txt)     | Sanitized, human-readable policy source.                                        |
+| [`policy_metadata.json`](policy_metadata.json) | Validated policy mapping, retrieval hints, and eligibility metadata.            |
+| [`tests/`](tests/)                             | Deterministic unit, integration, tool, and graph coverage.                      |
+| [`eval/`](eval/)                               | Committed evaluation cases and executed reports.                                |
+| [`docs/`](docs/)                               | Detailed architecture, development, testing, observability, and decisions.      |
 
-```powershell
-python scripts/run_smoke_queries.py --limit 1
-```
-
-Validate or inspect the graph with the LangGraph CLI:
-
-```powershell
-langgraph validate
-langgraph dev
-```
-
-Regenerate the compiled graph artifact after topology changes:
-
-```powershell
-python scripts/export_graph_diagram.py
-```
-
-The verified E001/JL3 example returns the THB 14,250 annual OPD limit, while
-E003/Operations JL1 returns THB 300 per visit for at most 15 visits per year.
-Both answers cite their eligible policy IDs. An unsupported parking query
-returns a grounded insufficient-information response without invoking the
-Report Generator model.
-
-## Project guidance
-
-- [Architecture](docs/ARCHITECTURE.md)
-- [Local development](docs/DEVELOPMENT.md)
-- [Testing strategy](docs/TESTING.md)
-- [Observability and trace inspection](docs/OBSERVABILITY.md)
-- [Technical decisions](docs/DECISIONS.md)
-- [Active plan and roadmap](PLANS.md)
-- [Coding-agent instructions](AGENTS.md)
-
-Setup commands and the current verification state are documented in
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). Executed UI screenshots are under
-[`docs/assets`](docs/assets); final presentation material remains a later slice.
+For deeper engineering contracts, see [Architecture](docs/ARCHITECTURE.md),
+[Observability](docs/OBSERVABILITY.md), [Decisions](docs/DECISIONS.md),
+[Development](docs/DEVELOPMENT.md), and [Testing](docs/TESTING.md).

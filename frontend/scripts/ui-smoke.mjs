@@ -144,6 +144,13 @@ try {
       path: resolve(outputDirectory, "demo-chat-opd-th-e001.png"),
       fullPage: true,
     });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator(".markdown-content").last().scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: resolve(outputDirectory, "demo-chat-opd-th-e001-mobile.png"),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1440, height: 960 });
     await openHistory(page);
     const savedConversation = page.locator(".history-item").first();
     await savedConversation.getByRole("link", { name: "Open conversation" }).waitFor();
@@ -174,7 +181,7 @@ try {
       .last()
       .textContent();
     if (
-      !policyScopeAnswer?.includes("MED-OPD-GENERAL-JL2-8") ||
+      !policyScopeAnswer?.includes("4.4.1.1") ||
       !policyScopeAnswer.includes("E001 (JL3)")
     ) {
       throw new Error(

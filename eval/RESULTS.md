@@ -2,20 +2,22 @@
 
 ## Executed baseline
 
-- Date: 2026-08-08
+- Date: 2026-08-09
 - Python: 3.13.5
 - Embedding model: OpenAI `text-embedding-3-small`
 - Source: sanitized policy prose in `knowledge_base.txt`
 - Derived retrieval metadata: `policy_metadata.json`
 - Vector store: persistent local Chroma, cosine collection
 - Chunking: natural numbered policy clauses, overlap `0`
-- Candidate filter: deterministic eligible policy IDs via Chroma metadata `$in`
+- Candidate filter: personal retrieval uses deterministic eligible policy IDs
+  via Chroma metadata `$in`; explicit policy-scope behavior is evaluated in the
+  agent workflow
 - Similarity: `1 - Chroma cosine distance`
 - Minimum similarity: `0.26`
 - Top-K: `3`
-- Dataset: 15 committed cases (13 positive, 2 expected-no-evidence)
+- Dataset: 16 committed cases (14 positive, 2 expected-no-evidence)
 - Command: `python scripts/evaluate_retrieval.py`
-- Outcome: all 15 cases passed their Top-3/no-evidence expectations
+- Outcome: all 16 cases passed their Top-3/no-evidence expectations
 
 | Metric | Result |
 | --- | ---: |
@@ -24,7 +26,8 @@
 | MRR | 1.000 |
 | No-evidence accuracy | 1.000 |
 
-The dataset covers English and Thai OPD, IPD, hospital-room, eligibility,
+The dataset covers English and Thai OPD (including the natural wording
+`ค่ารักษาพยาบาลผู้ป่วยนอกเบิกได้เท่าไร`), IPD, hospital-room, eligibility,
 social-security-first, Day Case, ambulance, and overseas-accident questions
 across E001/JL3 General, E002/JL6 General, and E003/JL1 Operations. Annual-leave
 and parking questions verify that unsupported topics return no evidence at the

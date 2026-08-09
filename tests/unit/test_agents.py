@@ -97,6 +97,9 @@ def test_report_generator_returns_cited_supported_answer() -> None:
 
     assert result.grounding_valid is True
     assert "THB 14,250" in result.answer
+    assert "MED-OPD-GENERAL-JL2-8" not in result.answer
+    assert "**Sources**" in result.answer
+    assert result.citation_policy_ids == ("MED-OPD-GENERAL-JL2-8",)
     assert len(model.invocations) == 1
     assert "Required answer language: English" in model.invocations[0][-1].content
 
@@ -115,6 +118,9 @@ def test_report_generator_pins_thai_language_from_question() -> None:
     )
 
     assert result.grounding_valid is True
+    assert "MED-OPD-GENERAL-JL2-8" not in result.answer
+    assert "**แหล่งอ้างอิง**" in result.answer
+    assert result.citation_policy_ids == ("MED-OPD-GENERAL-JL2-8",)
     assert "Required answer language: Thai" in model.invocations[0][-1].content
 
 
@@ -133,6 +139,8 @@ def test_report_generator_receives_policy_first_and_profile_applicability_contra
     assert result.grounding_valid is True
     assert "does not apply" in result.answer
     assert "E001 (JL3)" in result.answer
+    assert "MED-CLAIM-OPERATIONS-JL1" not in result.answer
+    assert result.citation_policy_ids == ("MED-CLAIM-OPERATIONS-JL1",)
     system_prompt = model.invocations[0][0].content
     request = model.invocations[0][-1].content
     assert "Answer the policy question first" in system_prompt
@@ -166,4 +174,5 @@ def test_report_generator_does_not_call_model_without_evidence() -> None:
 
     assert result.answer == INSUFFICIENT_INFORMATION_RESPONSE
     assert result.grounding_valid is True
+    assert result.citation_policy_ids == ()
     assert model.invocations == []

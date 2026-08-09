@@ -220,7 +220,7 @@ def _evaluate_case(
         if not isinstance(retrieval_query, str) or not retrieval_query.strip():
             raise TypeError("graph output retrieval_query must be a non-empty string")
 
-        cited_ids = tuple(sorted(set(_CITATION_PATTERN.findall(answer))))
+        cited_ids = _citation_policy_ids(output, answer)
         retrieved_set = set(retrieved_ids)
         cited_set = set(cited_ids)
         if case.should_abstain:
@@ -288,6 +288,21 @@ def _evaluate_case(
 def _matches_language(answer: str, expected_language: str) -> bool:
     contains_thai = _THAI_PATTERN.search(answer) is not None
     return contains_thai if expected_language == "th" else not contains_thai
+
+
+def _citation_policy_ids(
+    output: Mapping[str, Any], answer: str
+) -> tuple[str, ...]:
+    """Read structured citation IDs while supporting older text-only graph output."""
+
+    declared_ids = output.get("citation_policy_ids")
+    if declared_ids is None:
+        return tuple(sorted(set(_CITATION_PATTERN.findall(answer))))
+    if not isinstance(declared_ids, list) or not all(
+        isinstance(policy_id, str) and policy_id for policy_id in declared_ids
+    ):
+        raise TypeError("graph output citation_policy_ids must be a list of strings")
+    return tuple(dict.fromkeys(declared_ids))
 
 
 def _rate(results: Sequence[AgentCaseResult], field_name: str) -> float:

@@ -68,6 +68,8 @@ def test_same_question_flows_through_graph_with_personalized_evidence(
     assert result["retrieval_query"] == "outpatient medical expenses"
     assert result["evidence"][0]["policy_id"] == expected_policy
     assert expected_amount in result["final_answer"]
+    assert expected_policy not in result["final_answer"]
+    assert result["citation_policy_ids"] == [expected_policy]
     assert result["grounding_valid"] is True
     assert len(retriever_model.invocations) == 1
     assert len(report_model.invocations) == 1
@@ -96,6 +98,7 @@ def test_graph_returns_grounded_abstention_for_unsupported_query(tmp_path) -> No
 
     assert result["evidence"] == []
     assert result["final_answer"] == INSUFFICIENT_INFORMATION_RESPONSE
+    assert result["citation_policy_ids"] == []
     assert result["grounding_valid"] is True
     assert report_model.invocations == []
 

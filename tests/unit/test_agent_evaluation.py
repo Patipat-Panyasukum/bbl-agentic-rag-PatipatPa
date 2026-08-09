@@ -53,13 +53,15 @@ def test_evaluates_positive_and_abstention_contracts() -> None:
             "OPD?": {
                 "retrieval_query": "outpatient limit",
                 "evidence": [{"policy_id": "MED-OPD"}],
-                "final_answer": "Limit THB 14,250 [MED-OPD].",
+                "final_answer": "Limit THB 14,250.\n\n**Sources**\n- Policy section 4.4.1.1",
+                "citation_policy_ids": ["MED-OPD"],
                 "grounding_valid": True,
             },
             "Parking?": {
                 "retrieval_query": "parking location",
                 "evidence": [],
                 "final_answer": INSUFFICIENT_INFORMATION_RESPONSE,
+                "citation_policy_ids": [],
                 "grounding_valid": True,
             },
         }
