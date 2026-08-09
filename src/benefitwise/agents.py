@@ -13,7 +13,7 @@ from benefitwise.retrieval import PolicyRetriever
 from benefitwise.retrieval_tool import build_policy_retrieval_tool
 
 INSUFFICIENT_INFORMATION_RESPONSE = (
-    "I’m sorry, but the available eligible policy evidence is insufficient to "
+    "I’m sorry, but the available policy evidence is insufficient to "
     "answer this question."
 )
 
@@ -32,11 +32,19 @@ trusted eligibility context is injected by the application.
 _REPORT_GENERATOR_PROMPT = """
 You are the BenefitWise Report Generator Agent.
 
-Answer the employee's question using only the supplied eligible policy evidence
-and trusted employee context. Evidence is ordered from most to least relevant,
+Answer the employee's question using only the supplied policy evidence and
+trusted employee context. Evidence is ordered from most to least relevant,
 and some lower-ranked items may be unrelated to the requested fact. You have no
 tools. Follow these rules:
 
+- Answer the policy question first, using the relevant supplied policy evidence
+  even when its deterministic applicability flag is `no` for the current
+  profile. A policy question is not suppressed merely because it concerns a
+  different employee group.
+- Do not make a personal-eligibility claim yourself. The application appends a
+  deterministic current-profile note after your policy answer, using the
+  evidence applicability flags and trusted context. Never treat a job level
+  typed in the question as a replacement for the trusted profile.
 - Use any evidence item that directly supports the requested fact and ignore
   unrelated items; do not abstain merely because some Top-K evidence is extra.
 - Preserve policy amounts, limits, conditions, and units exactly.
@@ -160,10 +168,16 @@ class ReportGeneratorAgent:
                 ),
             ]
         )
-        answer = response.text.strip()
-        if not answer:
+        policy_answer = response.text.strip()
+        if not policy_answer:
             raise AgentProtocolError("Report Generator returned an empty answer")
 
+        answer = _append_profile_applicability(
+            policy_answer,
+            user_query,
+            employee,
+            evidence,
+        )
         grounding_valid = validate_grounded_answer(answer, employee, evidence)
         if not grounding_valid:
             # Never release an answer that fails the deterministic support checks.
@@ -212,6 +226,10 @@ def _build_report_request(
                 [
                     f"Policy ID: {item['policy_id']}",
                     f"Title: {item['title']}",
+                    (
+                        "Applies to current profile: "
+                        f"{'yes' if item.get('applies_to_current_employee') is True else 'no'}"
+                    ),
                     "Raw policy text:",
                     str(item["excerpt"]),
                 ]
@@ -228,10 +246,71 @@ def _build_report_request(
                 f"country={employee.country}, company={employee.company}, "
                 f"employee_type={employee.employee_type}"
             ),
-            "Eligible policy evidence:",
+            "Retrieved policy evidence:",
             *evidence_sections,
         ]
     )
+
+
+def _append_profile_applicability(
+    policy_answer: str,
+    user_query: str,
+    employee: EmployeeContext,
+    evidence: list[dict[str, object]],
+) -> str:
+    """Append a deterministic personal note after the model's policy answer."""
+
+    evidence_by_id = {
+        str(item["policy_id"]): item
+        for item in evidence
+        if isinstance(item.get("policy_id"), str)
+    }
+    cited_ids = [
+        policy_id
+        for policy_id in dict.fromkeys(_CITATION_PATTERN.findall(policy_answer))
+        if policy_id in evidence_by_id
+    ]
+    if not cited_ids:
+        # Grounding validation will reject the response. Avoid adding an
+        # unsupported personal statement to an already invalid answer.
+        return policy_answer
+
+    applicable_ids = [
+        policy_id
+        for policy_id in cited_ids
+        if evidence_by_id[policy_id].get("applies_to_current_employee") is True
+    ]
+    non_applicable_ids = [
+        policy_id for policy_id in cited_ids if policy_id not in applicable_ids
+    ]
+    citations = " ".join(f"[{policy_id}]" for policy_id in cited_ids)
+    profile = f"{employee.employee_id} ({employee.job_level})"
+
+    if _answer_language(user_query) == "Thai":
+        if applicable_ids and not non_applicable_ids:
+            note = f"สำหรับโปรไฟล์ปัจจุบัน {profile}: หลักฐานที่อ้างอิงใช้กับโปรไฟล์นี้"
+        elif non_applicable_ids and not applicable_ids:
+            note = (
+                f"สำหรับโปรไฟล์ปัจจุบัน {profile}: หลักฐานที่อ้างอิงไม่ใช้กับโปรไฟล์นี้"
+            )
+        else:
+            note = (
+                f"สำหรับโปรไฟล์ปัจจุบัน {profile}: หลักฐานที่อ้างอิงมีทั้งส่วนที่ใช้ "
+                "และไม่ใช้กับโปรไฟล์นี้"
+            )
+    elif applicable_ids and not non_applicable_ids:
+        note = f"For the current profile {profile}, the cited policy evidence applies."
+    elif non_applicable_ids and not applicable_ids:
+        note = (
+            f"For the current profile {profile}, the cited policy evidence does not apply."
+        )
+    else:
+        note = (
+            f"For the current profile {profile}, the cited policy evidence has mixed "
+            "applicability."
+        )
+
+    return f"{policy_answer}\n\n{note} {citations}"
 
 
 def _answer_language(user_query: str) -> str:

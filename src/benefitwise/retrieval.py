@@ -1,10 +1,11 @@
-"""Eligibility-first semantic retrieval for employee benefit policies."""
+"""Policy-source and eligibility-first personal semantic retrieval."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Any
 
 from benefitwise.embeddings import EmbeddingProvider
@@ -13,17 +14,21 @@ from benefitwise.policy import PolicyChunk, PolicyEligibility, filter_eligible_p
 from benefitwise.vector_store import ChromaPolicyVectorStore, PolicyVectorStore
 
 DEFAULT_MIN_SIMILARITY = 0.26
+_EXPLICIT_JOB_LEVEL_SCOPE_PATTERN = re.compile(
+    r"\bJL(?:[\s\"'“”‘’_-])*(?P<level>[1-9][0-9]*)\b", re.IGNORECASE
+)
 
 
 @dataclass(frozen=True, slots=True)
 class PolicyEvidence:
-    """A ranked raw policy snippet returned by the retrieval boundary."""
+    """A ranked raw policy snippet plus deterministic profile applicability."""
 
     policy_id: str
     title: str
     excerpt: str
     eligibility: PolicyEligibility
     similarity_score: float
+    applies_to_current_employee: bool = True
 
     def as_dict(self) -> dict[str, object]:
         """Return stable structured evidence for LangChain tool artifacts."""
@@ -34,11 +39,12 @@ class PolicyEvidence:
             "excerpt": self.excerpt,
             "eligibility": self.eligibility.as_dict(),
             "similarity_score": self.similarity_score,
+            "applies_to_current_employee": self.applies_to_current_employee,
         }
 
 
 class PolicyRetriever:
-    """Filter policy access deterministically, then perform semantic ranking."""
+    """Rank policy evidence and deterministically annotate personal applicability."""
 
     def __init__(
         self,
@@ -90,7 +96,71 @@ class PolicyRetriever:
         top_k: int = 3,
         reference_query: str | None = None,
     ) -> tuple[PolicyEvidence, ...]:
-        """Return eligible, relevant policy evidence in deterministic rank order."""
+        """Return personal, eligible policy evidence in deterministic rank order."""
+
+        # This ordering is a security and business-rule boundary for a personal
+        # answer. Only IDs admitted here are passed into Chroma's candidate filter.
+        eligible_policies = filter_eligible_policies(self._policies, employee)
+        if not eligible_policies:
+            return ()
+        return self._retrieve_from_candidates(
+            query,
+            employee,
+            candidate_policies=eligible_policies,
+            top_k=top_k,
+            reference_query=reference_query,
+            prefer_reference_ranking=False,
+        )
+
+    def retrieve_policy_information(
+        self,
+        query: str,
+        employee: EmployeeContext,
+        *,
+        top_k: int = 3,
+        reference_query: str | None = None,
+    ) -> tuple[PolicyEvidence, ...]:
+        """Return relevant policy-source evidence, tagged for the current profile.
+
+        This lane answers a policy question before applying it to the current
+        employee. An explicitly named job level narrows the policy candidate
+        set by the policy's own range metadata, but never replaces the trusted
+        employee identity: applicability remains a deterministic flag derived
+        from the trusted employee context and the sidecar metadata.
+        """
+
+        scope_query = reference_query or query
+        requested_levels = extract_explicit_job_levels(scope_query)
+        candidate_policies = tuple(
+            policy
+            for policy in self._policies
+            if not requested_levels
+            or any(
+                policy.eligibility.min_job_level <= level
+                <= policy.eligibility.max_job_level
+                for level in requested_levels
+            )
+        )
+        return self._retrieve_from_candidates(
+            query,
+            employee,
+            candidate_policies=candidate_policies,
+            top_k=top_k,
+            reference_query=reference_query,
+            prefer_reference_ranking=True,
+        )
+
+    def _retrieve_from_candidates(
+        self,
+        query: str,
+        employee: EmployeeContext,
+        *,
+        candidate_policies: Sequence[PolicyChunk],
+        top_k: int,
+        reference_query: str | None,
+        prefer_reference_ranking: bool,
+    ) -> tuple[PolicyEvidence, ...]:
+        """Rank a deterministic candidate set and annotate profile applicability."""
 
         normalized_query = _validate_query(query)
         normalized_reference = (
@@ -101,10 +171,7 @@ class PolicyRetriever:
         if top_k < 1:
             raise ValueError("top_k must be at least 1")
 
-        # This ordering is a security and business-rule boundary. Only IDs
-        # admitted here are passed into Chroma's metadata candidate filter.
-        eligible_policies = filter_eligible_policies(self._policies, employee)
-        if not eligible_policies:
+        if not candidate_policies:
             return ()
 
         query_texts = [normalized_query]
@@ -113,39 +180,50 @@ class PolicyRetriever:
         self._vector_store.synchronize(self._policies)
         match_sets = self._vector_store.query(
             query_texts,
-            candidate_policy_ids=[policy.policy_id for policy in eligible_policies],
+            candidate_policy_ids=[policy.policy_id for policy in candidate_policies],
         )
         primary_matches = match_sets[0]
+        primary_scores = {
+            match.policy_id: match.similarity_score for match in primary_matches
+        }
+        has_reference = len(match_sets) == 2
         reference_scores = (
-            {
-                match.policy_id: match.similarity_score
-                for match in match_sets[1]
-            }
-            if len(match_sets) == 2
-            else {
-                match.policy_id: match.similarity_score
-                for match in primary_matches
-            }
+            {match.policy_id: match.similarity_score for match in match_sets[1]}
+            if has_reference
+            else primary_scores
         )
 
-        # When an agent reformulates the search, the original question remains
-        # a relevance anchor so generic added words cannot create evidence.
-        evidence: list[PolicyEvidence] = []
+        # Personal retrieval can fuse the reformulation with the original wording
+        # after the original clears the threshold. An explicit policy-scope
+        # question instead ranks by the original wording, so an LLM cannot change
+        # the subject the employee explicitly asked about (for example OPD to IPD).
+        ranked_matches = []
         for match in primary_matches:
             reference_score = reference_scores.get(match.policy_id, -1.0)
-            if (
-                match.similarity_score < self.min_similarity
-                or reference_score < self.min_similarity
-            ):
+            rank_score = (
+                reference_score
+                if has_reference and prefer_reference_ranking
+                else max(match.similarity_score, reference_score)
+            )
+            ranked_matches.append((match.policy_id, rank_score))
+        ranked_matches.sort(key=lambda match: (-match[1], match[0]))
+
+        evidence: list[PolicyEvidence] = []
+        for policy_id, similarity_score in ranked_matches:
+            reference_score = reference_scores.get(policy_id, -1.0)
+            if reference_score < self.min_similarity:
                 continue
-            policy = self._policies_by_id[match.policy_id]
+            if not has_reference and similarity_score < self.min_similarity:
+                continue
+            policy = self._policies_by_id[policy_id]
             evidence.append(
                 PolicyEvidence(
                     policy_id=policy.policy_id,
                     title=policy.title,
                     excerpt=policy.content,
                     eligibility=policy.eligibility,
-                    similarity_score=match.similarity_score,
+                    similarity_score=similarity_score,
+                    applies_to_current_employee=policy.eligibility.allows(employee),
                 )
             )
         return tuple(evidence[:top_k])
@@ -158,3 +236,19 @@ def _validate_query(query: str) -> str:
     if not normalized_query:
         raise ValueError("query must not be blank")
     return normalized_query
+
+
+def has_explicit_job_level_scope(query: str) -> bool:
+    """Return whether a policy question names a job-level audience explicitly."""
+
+    return bool(extract_explicit_job_levels(query))
+
+
+def extract_explicit_job_levels(query: str) -> frozenset[int]:
+    """Extract explicitly named job levels without treating them as identity input."""
+
+    normalized_query = _validate_query(query)
+    return frozenset(
+        int(match.group("level"))
+        for match in _EXPLICIT_JOB_LEVEL_SCOPE_PATTERN.finditer(normalized_query)
+    )

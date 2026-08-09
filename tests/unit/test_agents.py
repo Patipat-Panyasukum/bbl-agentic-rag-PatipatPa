@@ -37,6 +37,18 @@ def _opd_evidence() -> list[dict[str, object]]:
     ]
 
 
+def _out_of_profile_policy_evidence() -> list[dict[str, object]]:
+    evidence = _retriever().retrieve_policy_information(
+        "operations social security policy",
+        _employee(),
+    )
+    return [
+        item.as_dict()
+        for item in evidence
+        if item.policy_id == "MED-CLAIM-OPERATIONS-JL1"
+    ]
+
+
 def test_data_retriever_must_call_employee_bound_tool() -> None:
     model = FakeToolCallingModel("clinic visit allowance")
     agent = DataRetrieverAgent(model, _retriever(), top_k=2)
@@ -104,6 +116,27 @@ def test_report_generator_pins_thai_language_from_question() -> None:
 
     assert result.grounding_valid is True
     assert "Required answer language: Thai" in model.invocations[0][-1].content
+
+
+def test_report_generator_receives_policy_first_and_profile_applicability_contract() -> None:
+    model = FakeReportModel(
+        "The policy requires social security first [MED-CLAIM-OPERATIONS-JL1]."
+    )
+    agent = ReportGeneratorAgent(model)
+
+    result = agent.generate(
+        "What does the JL1 social security policy require?",
+        _employee(),
+        _out_of_profile_policy_evidence(),
+    )
+
+    assert result.grounding_valid is True
+    assert "does not apply" in result.answer
+    assert "E001 (JL3)" in result.answer
+    system_prompt = model.invocations[0][0].content
+    request = model.invocations[0][-1].content
+    assert "Answer the policy question first" in system_prompt
+    assert "Applies to current profile: no" in request
 
 
 @pytest.mark.parametrize(

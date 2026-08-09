@@ -58,6 +58,7 @@ def test_uses_source_section_as_raw_evidence() -> None:
     assert "14,250 บาทต่อปี" in opd.content
     assert "min_job_level" not in opd.content
     assert "outpatient medical benefit" in opd.search_terms
+    assert "ค่ารักษาพยาบาลผู้ป่วยนอก เบิกได้เท่าไร" in opd.search_terms
 
 
 @pytest.mark.parametrize(

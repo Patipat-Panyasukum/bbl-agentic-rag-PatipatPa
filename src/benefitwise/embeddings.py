@@ -47,7 +47,7 @@ class OpenAIEmbeddingProvider:
             return np.empty((0, 0), dtype=np.float32)
 
         # Initialization stays lazy so policy/parser tests do not require an
-        # API key. The runtime still sends only eligibility-filtered content.
+        # API key. Candidate selection happens at the retrieval boundary.
         if self._client is None:
             from langchain_openai import OpenAIEmbeddings
 

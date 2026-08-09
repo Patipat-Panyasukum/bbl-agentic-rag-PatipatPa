@@ -18,6 +18,7 @@ data/chroma/
 
 # Agent-local configuration
 .codex/
+.impeccable.md
 
 # Frontend
 frontend/node_modules/
