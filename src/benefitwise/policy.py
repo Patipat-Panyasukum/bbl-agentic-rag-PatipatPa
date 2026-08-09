@@ -12,7 +12,7 @@ _JOB_LEVEL_PATTERN = re.compile(r"^JL(?P<level>[1-9][0-9]*)$", re.IGNORECASE)
 
 @dataclass(frozen=True, slots=True)
 class PolicyEligibility:
-    """Metadata rules that determine whether a policy may enter retrieval."""
+    """Metadata rules that determine policy applicability to an employee."""
 
     countries: frozenset[str]
     companies: frozenset[str]
@@ -55,7 +55,7 @@ class PolicyChunk:
 
     @property
     def searchable_text(self) -> str:
-        """Text presented to the embedding model after eligibility filtering."""
+        """Text presented to the embedding model after candidate selection."""
 
         retrieval_hints = "\n".join(self.search_terms)
         return "\n".join(part for part in (self.title, self.content, retrieval_hints) if part)
@@ -77,7 +77,7 @@ def filter_eligible_policies(
     policies: tuple[PolicyChunk, ...] | list[PolicyChunk],
     employee: EmployeeContext,
 ) -> tuple[PolicyChunk, ...]:
-    """Return policies the trusted employee context is allowed to retrieve."""
+    """Return policies applicable to a trusted employee for personal retrieval."""
 
     return tuple(policy for policy in policies if policy.eligibility.allows(employee))
 

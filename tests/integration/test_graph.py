@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from langchain_core.messages import HumanMessage
 
 from benefitwise.agents import INSUFFICIENT_INFORMATION_RESPONSE
 from benefitwise.employee_repository import (
@@ -127,3 +128,29 @@ def test_graph_exposes_expected_sequential_nodes(tmp_path) -> None:
         "retrieval_tool",
         "report_generator_agent",
     } <= node_names
+
+
+def test_graph_accepts_agent_chat_ui_messages_and_exposes_real_tool_call(
+    tmp_path,
+) -> None:
+    graph, _ = _build_graph(
+        tmp_path, "outpatient medical expenses", EvidenceEchoReportModel()
+    )
+
+    result = graph.invoke(
+        {
+            "employee_id": "E001",
+            "messages": [
+                HumanMessage(
+                    content="How much can I claim for outpatient medical expenses?"
+                )
+            ],
+        }
+    )
+
+    messages = result["messages"]
+    assert [message.type for message in messages] == ["human", "ai", "tool", "ai"]
+    assert messages[1].tool_calls[0]["name"] == "retrieve_benefit_policies"
+    assert messages[2].tool_call_id == messages[1].tool_calls[0]["id"]
+    assert messages[-1].content == result["final_answer"]
+    assert result["employee_context"].employee_id == "E001"

@@ -1,0 +1,21 @@
+{
+  "name": "frontend",
+  "author": "Patipat Panyasukum",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace web",
+    "build": "npm run build --workspace web",
+    "lint": "npm run lint --workspace web",
+    "typecheck": "npm run typecheck --workspace web",
+    "format": "npm run format --workspace web",
+    "format:check": "npm run format:check --workspace web",
+    "ui:smoke": "node scripts/ui-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.62.1"
+  },
+  "packageManager": "npm@11.4.2"
+}

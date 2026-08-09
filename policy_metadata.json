@@ -87,7 +87,8 @@
       "search_terms": [
         "outpatient medical benefit",
         "OPD annual allowance clinic visit reimbursement",
-        "วงเงินผู้ป่วยนอกต่อปี"
+        "วงเงินผู้ป่วยนอกต่อปี",
+        "ค่ารักษาพยาบาลผู้ป่วยนอก เบิกได้เท่าไร"
       ],
       "eligibility": {
         "countries": ["TH"],
@@ -135,7 +136,8 @@
       "search_terms": [
         "operations outpatient medical benefit",
         "OPD limit per clinic visit visits per year",
-        "วงเงินผู้ป่วยนอกต่อครั้ง จำนวนครั้งต่อปี"
+        "วงเงินผู้ป่วยนอกต่อครั้ง จำนวนครั้งต่อปี",
+        "ค่ารักษาพยาบาลผู้ป่วยนอก เบิกได้เท่าไร"
       ],
       "eligibility": {
         "countries": ["TH"],

@@ -53,7 +53,7 @@ class PolicyVectorStore(Protocol):
 
 
 class ChromaPolicyVectorStore:
-    """Synchronize policy clauses and run eligibility-constrained vector search."""
+    """Synchronize policy clauses and rank a caller-supplied candidate set."""
 
     def __init__(
         self,
@@ -155,7 +155,7 @@ class ChromaPolicyVectorStore:
         *,
         candidate_policy_ids: Sequence[str],
     ) -> tuple[tuple[VectorMatch, ...], ...]:
-        """Rank only the policy IDs admitted by deterministic eligibility rules."""
+        """Rank only the policy IDs supplied by the deterministic caller."""
 
         texts = list(query_texts)
         candidate_ids = list(dict.fromkeys(candidate_policy_ids))
@@ -170,7 +170,7 @@ class ChromaPolicyVectorStore:
         _validate_embedding_shape(query_vectors, expected_rows=len(texts))
 
         # `policy_id $in [...]` is the vector-database pre-filter. Chroma applies
-        # it to the candidate set before cosine nearest-neighbour ranking.
+        # it to the deterministic candidate set before cosine ranking.
         result = self._collection.query(
             query_embeddings=query_vectors.tolist(),
             n_results=len(candidate_ids),
