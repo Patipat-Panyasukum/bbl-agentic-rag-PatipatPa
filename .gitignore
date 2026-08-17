@@ -1,5 +1,8 @@
-# Secrets key
+# Secrets and deployment configuration
 .env
+.env.*
+!.env.example
+!.env.*.example
 
 # Python
 .venv/
@@ -23,7 +26,7 @@ data/chroma/
 # Frontend
 frontend/node_modules/
 frontend/.next/
-frontend/.env.local
+# The rules above also cover frontend/.env.local and frontend/.env.production.
 
 # IDE / OS
 .vscode/
